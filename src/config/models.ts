@@ -2,17 +2,23 @@ export interface ModelConfig {
   id: string;
   label: string;
   url: string;
-  format: 'vrm' | 'fbx';
-  // Rotation fix per model (in radians)
+  format: 'vrm' | 'fbx' | 'glb';
   rotation?: [number, number, number];
-  // Vertical offset to adjust model position
   yOffset?: number;
-  // Camera zoom adjustment (positive = zoom in, negative = zoom out)
   zoomAdjust?: number;
 }
 
 
 export const MODELS: ModelConfig[] = [
+  {
+    id: 'cute-moth',
+    label: 'Cute Moth (VRM)',
+    url: '/models/CuteMoth.vrm',
+    format: 'vrm',
+    rotation: [0, Math.PI, 0],
+    yOffset: 0.1,
+    zoomAdjust: -0.3,
+  },
   {
     id: 'boy1',
     label: 'Boy 1 (VRM)',
@@ -30,15 +36,6 @@ export const MODELS: ModelConfig[] = [
     rotation: [0, Math.PI, 0],
     yOffset: 0.05,
     zoomAdjust: 0,
-  },
-  {
-    id: 'cute-moth',
-    label: 'Cute Moth (VRM)',
-    url: '/models/CuteMoth.vrm',
-    format: 'vrm',
-    rotation: [0, Math.PI, 0],
-    yOffset: 0.1,
-    zoomAdjust: -0.3,
   },
   {
     id: 'juanita',
@@ -75,5 +72,14 @@ export const MODELS: ModelConfig[] = [
     rotation: [0, Math.PI, 0],
     yOffset: 0.1,
     zoomAdjust: 0.3,
+  },
+  {
+    id: 'labrador',
+    label: 'Labrador (GLB)',
+    url: '/models/labrador_dog.glb',
+    format: 'glb',
+    rotation: [0, 0, 0],
+    yOffset: 0,
+    zoomAdjust: -0.8,
   },
 ];

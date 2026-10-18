@@ -9,7 +9,7 @@ import { MODELS, type ModelConfig } from '../config/models';
 export default function Avatar() {
   const [selectedModel, setSelectedModel] = useState<ModelConfig>(MODELS[0]);
   const [faceTexture, setFaceTexture] = useState<string | null>(null);
-  const [canvasKey, setCanvasKey] = useState(0);
+  const [refreshCount, setRefreshCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,13 +18,17 @@ export default function Avatar() {
   };
 
   const handleRefresh = () => {
-    setCanvasKey((prev) => prev + 1);
+    setRefreshCount((prev) => prev + 1);
   };
 
   // Calculate camera position based on model offsets
   const baseZ = 3.5;
   const cameraZ = baseZ - (selectedModel.zoomAdjust ?? 0);
   const cameraY = 1.5 + (selectedModel.yOffset ?? 0);
+
+  // This forces Canvas to remount when model changes (picking up new camera settings)
+  // or when Refresh button is clicked
+  const canvasKey = `${selectedModel.id}-${refreshCount}`;
 
   return (
     <div className="space-y-6">
@@ -73,13 +77,7 @@ export default function Avatar() {
           {faceTexture ? 'Photo attached' : 'Upload Face Photo'}
         </button>
         <p className="text-sm text-gray-500">
-          Photo mapping lands in a future step. For now it only confirms the pipeline works (check console).
-        </p>
-      </div>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
-          <strong>Tip:</strong> If the display looks wrong after switching models, click "Refresh" to force a clean reload.
+          Photo mapping lands in a future step.
         </p>
       </div>
     </div>

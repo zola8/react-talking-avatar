@@ -3,10 +3,9 @@ import { useFrame, useLoader } from '@react-three/fiber';
 import { useEffect } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { ModelConfig } from '../../config/models';
-import { useIdleAnimation } from '../../hooks/useIdleAnimation';
+import { useVrmAnimations } from '../../hooks/useVrmAnimations';
 import { inspectModel } from '../../utils/modelInspector';
 import { useAutoFit } from '../../utils/modelNormalizer';
-import { useBlinkAnimation } from '../../hooks/useBlinkAnimation';
 
 
 interface VrmModelProps {
@@ -24,8 +23,7 @@ export default function VrmModel({ config, faceTextureUrl }: VrmModelProps) {
   const scene = vrm?.scene ?? gltf.scene;
 
   useAutoFit(scene);
-  useIdleAnimation(vrm);
-  useBlinkAnimation(vrm);
+  useVrmAnimations(vrm);
 
   useEffect(() => {
     inspectModel(scene, vrm ? 'VRM' : 'GLTF (no VRM block found)', config.label);

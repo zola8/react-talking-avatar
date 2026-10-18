@@ -1,7 +1,8 @@
 import { Suspense } from 'react';
-import type { ModelConfig } from '../config/models';
-import FbxModel from './loaders/FbxModel';
 import VrmModel from './loaders/VrmModel';
+import FbxModel from './loaders/FbxModel';
+import GlbModel from './loaders/GlbModel';
+import type { ModelConfig } from '../config/models';
 
 
 interface UniversalModelProps {
@@ -11,7 +12,6 @@ interface UniversalModelProps {
 
 
 export default function UniversalModel({ config, faceTextureUrl }: UniversalModelProps) {
-  // Pipeline is wired; applying texture to face mesh is a future step
   if (faceTextureUrl) {
     console.log(`[UniversalModel] Face texture received: ${faceTextureUrl}`);
   }
@@ -20,6 +20,8 @@ export default function UniversalModel({ config, faceTextureUrl }: UniversalMode
     <Suspense fallback={null}>
       {config.format === 'fbx' ? (
         <FbxModel config={config} faceTextureUrl={faceTextureUrl} />
+      ) : config.format === 'glb' ? (
+        <GlbModel config={config} faceTextureUrl={faceTextureUrl} />
       ) : (
         <VrmModel config={config} faceTextureUrl={faceTextureUrl} />
       )}

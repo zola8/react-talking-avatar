@@ -12,9 +12,11 @@ export function inspectModel(root: Object3D, label: string, modelName: string): 
       ? Object.keys(mesh.morphTargetDictionary).join(', ')
       : 'none';
 
+    /*
     console.log(
       `Mesh: "${mesh.name}" | Materials: [${mats.map((m) => m?.name || 'unnamed').join(', ')}] | MorphTargets: ${morphs}`
     );
+    */
   });
   console.groupEnd();
 }
