@@ -3,7 +3,10 @@ import { useFrame, useLoader } from '@react-three/fiber';
 import { useEffect } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { ModelConfig } from '../../config/models';
-import { useVrmAnimations } from '../../hooks/useVrmAnimations';
+import { useArmRelaxation } from '../../hooks/useArmRelaxation';
+import { useBlinkAnimation } from '../../hooks/useBlinkAnimation';
+import { useHeadAnimation } from '../../hooks/useHeadAnimation';
+import { useIdleBodyAnimation } from '../../hooks/useIdleBodyAnimation';
 import { inspectModel } from '../../utils/modelInspector';
 import { useAutoFit } from '../../utils/modelNormalizer';
 
@@ -23,14 +26,23 @@ export default function VrmModel({ config, faceTextureUrl }: VrmModelProps) {
   const scene = vrm?.scene ?? gltf.scene;
 
   useAutoFit(scene);
-  useVrmAnimations(vrm);
+
+  // Each hook now captures its own rest poses
+  useIdleBodyAnimation(vrm);
+  useArmRelaxation(vrm);
+  useHeadAnimation(vrm);
+  useBlinkAnimation(vrm);
 
   useEffect(() => {
     inspectModel(scene, vrm ? 'VRM' : 'GLTF (no VRM block found)', config.label);
     return () => (vrm ? VRMUtils.deepDispose(vrm.scene) : undefined);
   }, [scene, vrm, config.label]);
 
-  useFrame((_, delta) => vrm?.update(delta));
+  // Update VRM after animations are applied
+  useFrame((_, delta) => {
+    const clampedDelta = Math.min(delta, 0.1);
+    vrm?.update(clampedDelta);
+  });
 
   const rotation = config.rotation ?? [0, 0, 0];
   const yOffset = config.yOffset ?? 0;
