@@ -1,1 +1,1 @@
-# react-avatar-speech
+# react-talking-avatar
