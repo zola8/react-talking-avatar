@@ -1,10 +1,12 @@
-import { useEffect } from 'react';
-import { useFrame, useLoader } from '@react-three/fiber';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { VRMLoaderPlugin, VRMUtils, type VRM } from '@pixiv/three-vrm';
-import { useAutoFit } from '../../utils/modelNormalizer';
-import { inspectModel } from '../../utils/modelInspector';
+import { useFrame, useLoader } from '@react-three/fiber';
+import { useEffect } from 'react';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { ModelConfig } from '../../config/models';
+import { useIdleAnimation } from '../../hooks/useIdleAnimation';
+import { inspectModel } from '../../utils/modelInspector';
+import { useAutoFit } from '../../utils/modelNormalizer';
+import { useBlinkAnimation } from '../../hooks/useBlinkAnimation';
 
 
 interface VrmModelProps {
@@ -22,6 +24,8 @@ export default function VrmModel({ config, faceTextureUrl }: VrmModelProps) {
   const scene = vrm?.scene ?? gltf.scene;
 
   useAutoFit(scene);
+  useIdleAnimation(vrm);
+  useBlinkAnimation(vrm);
 
   useEffect(() => {
     inspectModel(scene, vrm ? 'VRM' : 'GLTF (no VRM block found)', config.label);
