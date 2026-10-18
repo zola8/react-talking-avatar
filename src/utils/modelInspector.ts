@@ -1,8 +1,8 @@
 import type { Object3D, Mesh } from 'three';
 
 
-export function inspectModel(root: Object3D, label: string): void {
-  console.group(`[Model Inspector] ${label}`);
+export function inspectModel(root: Object3D, label: string, modelName: string): void {
+  console.group(`[Model Inspector] ${label} - ${modelName}`);
   root.traverse((child) => {
     const mesh = child as Mesh;
     if (!mesh.isMesh) return;

@@ -18,24 +18,23 @@ export default function VrmModel({ config, faceTextureUrl }: VrmModelProps) {
     loader.register((parser) => new VRMLoaderPlugin(parser));
   });
 
-  // Falls back to plain GLTF scene if file has no VRM block
   const vrm = gltf.userData.vrm as VRM | undefined;
   const scene = vrm?.scene ?? gltf.scene;
 
   useAutoFit(scene);
 
   useEffect(() => {
-    inspectModel(scene, vrm ? 'VRM' : 'GLTF (no VRM block found)');
+    inspectModel(scene, vrm ? 'VRM' : 'GLTF (no VRM block found)', config.label);
     return () => (vrm ? VRMUtils.deepDispose(vrm.scene) : undefined);
-  }, [scene, vrm]);
+  }, [scene, vrm, config.label]);
 
   useFrame((_, delta) => vrm?.update(delta));
 
-  // Apply rotation from config
   const rotation = config.rotation ?? [0, 0, 0];
+  const yOffset = config.yOffset ?? 0;
 
   return (
-    <group rotation={rotation}>
+    <group rotation={rotation} position={[0, yOffset, 0]}>
       <primitive object={scene} dispose={null} />
     </group>
   );
