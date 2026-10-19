@@ -8,7 +8,7 @@ import { useBlinkAnimation } from '../../hooks/useBlinkAnimation';
 import { useHeadAnimation } from '../../hooks/useHeadAnimation';
 import { useIdleBodyAnimation } from '../../hooks/useIdleBodyAnimation';
 import { inspectModel } from '../../utils/modelInspector';
-import { useAutoFit } from '../../utils/modelNormalizer';
+import { computeTargetHeight, useAutoFit } from '../../utils/modelNormalizer';
 
 
 interface VrmModelProps {
@@ -24,12 +24,7 @@ export default function VrmModel({ config, faceTextureUrl }: VrmModelProps) {
   const vrm = gltf.userData.vrm as VRM | undefined;
   const scene = vrm?.scene ?? gltf.scene;
 
-  // Fold zoomAdjust into the target height instead of using a group scale.
-  // This way useAutoFit measures the scene at scale=1 (no parent scale to
-  // interfere), and the scene's own local scale carries the full multiplier.
-  const zoomAdjust = config.zoomAdjust ?? 0;
-  const baseHeight = 1.6;
-  useAutoFit(scene, baseHeight * (1 + zoomAdjust));
+  useAutoFit(scene, computeTargetHeight(config.zoomAdjust ?? 0));
 
   useIdleBodyAnimation(vrm);
   useArmRelaxation(vrm);

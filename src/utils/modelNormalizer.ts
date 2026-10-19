@@ -21,3 +21,8 @@ export function useAutoFit(object: Object3D, targetHeight = 1.6): void {
     object.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
   }, [object, targetHeight]);
 }
+
+
+export function computeTargetHeight(zoomAdjust: number, baseHeight = 1.6): number {
+  return Math.max(0.2, baseHeight * (1 + zoomAdjust));
+}

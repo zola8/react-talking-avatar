@@ -4,7 +4,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { ModelConfig } from '../../config/models';
 import { disposeObject } from '../../utils/modelDisposer';
 import { inspectModel } from '../../utils/modelInspector';
-import { useAutoFit } from '../../utils/modelNormalizer';
+import { computeTargetHeight, useAutoFit } from '../../utils/modelNormalizer';
 
 
 interface GlbModelProps {
@@ -12,12 +12,11 @@ interface GlbModelProps {
   faceTextureUrl?: string | null;
 }
 
-
 export default function GlbModel({ config, faceTextureUrl }: GlbModelProps) {
   const gltf = useLoader(GLTFLoader, config.url);
   const scene = gltf.scene;
 
-  useAutoFit(scene);
+  useAutoFit(scene, computeTargetHeight(config.zoomAdjust ?? 0));
 
   useEffect(() => {
     inspectModel(scene, 'GLB', config.label);

@@ -9,8 +9,8 @@ import { MODELS, type ModelConfig } from '../config/models';
 export default function Avatar() {
   const [selectedModel, setSelectedModel] = useState<ModelConfig>(MODELS[0]);
   const [faceTexture, setFaceTexture] = useState<string | null>(null);
-  const [refreshCount, setRefreshCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const controlsRef = useRef<any>(null);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -18,17 +18,17 @@ export default function Avatar() {
   };
 
   const handleRefresh = () => {
-    setRefreshCount((prev) => prev + 1);
+    // reset the camera. No Canvas remount needed.
+    controlsRef.current?.reset();
   };
 
-  // Calculate camera position based on model offsets
-  const baseZ = 3.5;
-  const cameraZ = baseZ - (selectedModel.zoomAdjust ?? 0);
+  // Camera: stable Z, Y follows the model's yOffset so the camera lifts with the model.
+  const cameraZ = 3.5;
   const cameraY = 1.5 + (selectedModel.yOffset ?? 0);
+  const lookAtY = 1.2 + (selectedModel.yOffset ?? 0);
 
-  // This forces Canvas to remount when model changes (picking up new camera settings)
-  // or when Refresh button is clicked
-  const canvasKey = `${selectedModel.id}-${refreshCount}`;
+  // Canvas only remounts on model switch, not on refresh.
+  const canvasKey = selectedModel.id;
 
   return (
     <div className="space-y-6">
@@ -43,9 +43,9 @@ export default function Avatar() {
           <button
             onClick={handleRefresh}
             className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
-            title="Refresh 3D view"
+            title="Reset camera view"
           >
-            Refresh
+            Reset View
           </button>
         </div>
       </div>
@@ -58,7 +58,15 @@ export default function Avatar() {
           <ambientLight intensity={0.7} />
           <directionalLight position={[5, 8, 5]} intensity={1.2} />
           <UniversalModel config={selectedModel} faceTextureUrl={faceTexture} />
-          <OrbitControls target={[0, 1.2, 0]} />
+          <OrbitControls
+            ref={controlsRef}
+            target={[0, lookAtY, 0]}
+            enablePan={false}
+            minDistance={1.5}
+            maxDistance={8}
+            minPolarAngle={0.2}
+            maxPolarAngle={Math.PI / 2 + 0.1}
+          />
         </Canvas>
       </div>
 
