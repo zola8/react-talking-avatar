@@ -16,7 +16,6 @@ interface VrmModelProps {
   faceTextureUrl?: string | null;
 }
 
-
 export default function VrmModel({ config, faceTextureUrl }: VrmModelProps) {
   const gltf = useLoader(GLTFLoader, config.url, (loader) => {
     loader.register((parser) => new VRMLoaderPlugin(parser));
@@ -25,9 +24,13 @@ export default function VrmModel({ config, faceTextureUrl }: VrmModelProps) {
   const vrm = gltf.userData.vrm as VRM | undefined;
   const scene = vrm?.scene ?? gltf.scene;
 
-  useAutoFit(scene);
+  // Fold zoomAdjust into the target height instead of using a group scale.
+  // This way useAutoFit measures the scene at scale=1 (no parent scale to
+  // interfere), and the scene's own local scale carries the full multiplier.
+  const zoomAdjust = config.zoomAdjust ?? 0;
+  const baseHeight = 1.6;
+  useAutoFit(scene, baseHeight * (1 + zoomAdjust));
 
-  // Each hook now captures its own rest poses
   useIdleBodyAnimation(vrm);
   useArmRelaxation(vrm);
   useHeadAnimation(vrm);
@@ -38,7 +41,6 @@ export default function VrmModel({ config, faceTextureUrl }: VrmModelProps) {
     return () => (vrm ? VRMUtils.deepDispose(vrm.scene) : undefined);
   }, [scene, vrm, config.label]);
 
-  // Update VRM after animations are applied
   useFrame((_, delta) => {
     const clampedDelta = Math.min(delta, 0.1);
     vrm?.update(clampedDelta);

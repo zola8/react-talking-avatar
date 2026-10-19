@@ -16,7 +16,7 @@ export const MODELS: ModelConfig[] = [
     url: '/models/CuteMoth.vrm',
     format: 'vrm',
     rotation: [0, Math.PI, 0],
-    yOffset: 0.1,
+    yOffset: 0.3,
     zoomAdjust: -0.3,
   },
   {
@@ -25,7 +25,7 @@ export const MODELS: ModelConfig[] = [
     url: '/models/boy1.vrm',
     format: 'vrm',
     rotation: [0, Math.PI, 0],
-    yOffset: 0.05,
+    yOffset: 0.2,
     zoomAdjust: 0,
   },
   {
@@ -34,7 +34,7 @@ export const MODELS: ModelConfig[] = [
     url: '/models/girl2.vrm',
     format: 'vrm',
     rotation: [0, Math.PI, 0],
-    yOffset: 0.05,
+    yOffset: 0.2,
     zoomAdjust: 0,
   },
   {
@@ -43,8 +43,8 @@ export const MODELS: ModelConfig[] = [
     url: '/models/juanita.vrm',
     format: 'vrm',
     rotation: [0, Math.PI, 0],
-    yOffset: 0.05,
-    zoomAdjust: 0.2,
+    yOffset: 0.2,
+    zoomAdjust: 0.1,
   },
   {
     id: 'lady-fawn',
@@ -52,17 +52,8 @@ export const MODELS: ModelConfig[] = [
     url: '/models/lady-fawn.vrm',
     format: 'vrm',
     rotation: [0, Math.PI, 0],
-    yOffset: 0.05,
+    yOffset: 0.2,
     zoomAdjust: 0,
-  },
-  {
-    id: 'lil-shark',
-    label: 'Lil Shark (VRM)',
-    url: '/models/LilShark.vrm',
-    format: 'vrm',
-    rotation: [0, Math.PI, 0],
-    yOffset: 0.1,
-    zoomAdjust: 0.3,
   },
   {
     id: 'two-tails',
@@ -70,8 +61,8 @@ export const MODELS: ModelConfig[] = [
     url: '/models/two-tails.vrm',
     format: 'vrm',
     rotation: [0, Math.PI, 0],
-    yOffset: 0.1,
-    zoomAdjust: 0.3,
+    yOffset: 0.3,
+    zoomAdjust: -0.1,
   },
   {
     id: 'labrador',
@@ -79,7 +70,7 @@ export const MODELS: ModelConfig[] = [
     url: '/models/labrador_dog.glb',
     format: 'glb',
     rotation: [0, 0, 0],
-    yOffset: 0,
+    yOffset: 0.2,
     zoomAdjust: -0.8,
   },
 ];

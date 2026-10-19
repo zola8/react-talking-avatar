@@ -1,12 +1,15 @@
 import { useLayoutEffect } from 'react';
 import { Box3, Vector3, type Object3D } from 'three';
 
-
 /**
  * Normalises ANY model so it is always ~targetHeight units tall with feet at y=0.
  */
 export function useAutoFit(object: Object3D, targetHeight = 1.6): void {
   useLayoutEffect(() => {
+    object.scale.setScalar(1);
+    object.position.set(0, 0, 0);
+    object.updateMatrixWorld(true);
+
     const box = new Box3().setFromObject(object);
     const size = box.getSize(new Vector3());
     const center = box.getCenter(new Vector3());
