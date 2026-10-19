@@ -11,15 +11,6 @@ export interface ModelConfig {
 
 export const MODELS: ModelConfig[] = [
   {
-    id: 'cute-moth',
-    label: 'Cute Moth (VRM)',
-    url: '/models/CuteMoth.vrm',
-    format: 'vrm',
-    rotation: [0, Math.PI, 0],
-    yOffset: -1.0,
-    zoomAdjust: -0.3,
-  },
-  {
     id: 'boy1',
     label: 'Boy 1 (VRM)',
     url: '/models/boy1.vrm',
@@ -36,6 +27,15 @@ export const MODELS: ModelConfig[] = [
     rotation: [0, Math.PI, 0],
     yOffset: -0.9,
     zoomAdjust: 0,
+  },
+  {
+    id: 'cute-moth',
+    label: 'Cute Moth (VRM)',
+    url: '/models/CuteMoth.vrm',
+    format: 'vrm',
+    rotation: [0, Math.PI, 0],
+    yOffset: -1.0,
+    zoomAdjust: -0.3,
   },
   {
     id: 'juanita',

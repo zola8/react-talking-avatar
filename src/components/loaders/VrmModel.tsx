@@ -9,6 +9,7 @@ import { useHeadAnimation } from '../../hooks/useHeadAnimation';
 import { useIdleBodyAnimation } from '../../hooks/useIdleBodyAnimation';
 import { inspectModel } from '../../utils/modelInspector';
 import { computeTargetHeight, useAutoFit } from '../../utils/modelNormalizer';
+import { useResetToTPose } from '../../hooks/useResetToTPose';
 
 
 interface VrmModelProps {
@@ -24,12 +25,13 @@ export default function VrmModel({ config, faceTextureUrl }: VrmModelProps) {
   const vrm = gltf.userData.vrm as VRM | undefined;
   const scene = vrm?.scene ?? gltf.scene;
 
-  useAutoFit(scene, computeTargetHeight(config.zoomAdjust ?? 0));
+  useResetToTPose(vrm);          // 1. T-pose reset (useLayoutEffect)
+  useArmRelaxation(vrm);         // 2. relaxed arm pose (useLayoutEffect for initial, useFrame for sway)
+  useIdleBodyAnimation(vrm);     // 3. captures rest poses (useLayoutEffect)
+  useHeadAnimation(vrm);         // 4. captures rest poses (useLayoutEffect)
+  useAutoFit(scene, computeTargetHeight(config.zoomAdjust ?? 0));  // 5. NOW measures relaxed pose
+  useBlinkAnimation(vrm);        // 6. expression setup (useLayoutEffect, doesn't affect bbox)
 
-  useIdleBodyAnimation(vrm);
-  useArmRelaxation(vrm);
-  useHeadAnimation(vrm);
-  useBlinkAnimation(vrm);
 
   useEffect(() => {
     inspectModel(scene, vrm ? 'VRM' : 'GLTF (no VRM block found)', config.label);

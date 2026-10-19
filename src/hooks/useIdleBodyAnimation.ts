@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber';
-import { useEffect, useRef } from 'react';
+import { useLayoutEffect, useRef } from 'react';
 import type { VRM } from '@pixiv/three-vrm';
 import type { VRMHumanBoneName } from '@pixiv/three-vrm';
 import type { RestPoses } from '../utils/restPoseCapture';
@@ -9,7 +9,7 @@ import { captureRestPoses } from '../utils/restPoseCapture';
 export function useIdleBodyAnimation(vrm: VRM | undefined): void {
   const restPosesRef = useRef<RestPoses>({});
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (vrm) {
       restPosesRef.current = captureRestPoses(vrm);
     }
@@ -22,7 +22,6 @@ export function useIdleBodyAnimation(vrm: VRM | undefined): void {
     const restPoses = restPosesRef.current;
     const getBone = (name: VRMHumanBoneName) => vrm.humanoid?.getNormalizedBoneNode(name);
 
-    // Breathing
     if (restPoses.chest) {
       const chest = getBone('chest' as VRMHumanBoneName);
       if (chest) {
@@ -31,7 +30,6 @@ export function useIdleBodyAnimation(vrm: VRM | undefined): void {
       }
     }
 
-    // Body sway
     if (restPoses.hips) {
       const hips = getBone('hips' as VRMHumanBoneName);
       if (hips) {
@@ -40,7 +38,6 @@ export function useIdleBodyAnimation(vrm: VRM | undefined): void {
       }
     }
 
-    // Spine counter-rotation
     if (restPoses.spine) {
       const spine = getBone('spine' as VRMHumanBoneName);
       if (spine) {
