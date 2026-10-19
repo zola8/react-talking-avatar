@@ -23,6 +23,7 @@ export function useArmRelaxation(vrm: VRM | undefined): void {
     const rsh = getBone('rightShoulder');
     if (rsh) rsh.rotation.set(0, 0, -0.1);
 
+    vrm.update(0);
     vrm.scene.updateMatrixWorld(true);
   }, [vrm]);
 

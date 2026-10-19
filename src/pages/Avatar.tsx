@@ -5,7 +5,6 @@ import ModelSelector from '../components/ModelSelector';
 import UniversalModel from '../components/UniversalModel';
 import { MODELS, type ModelConfig } from '../config/models';
 
-
 export default function Avatar() {
   const [selectedModel, setSelectedModel] = useState<ModelConfig>(MODELS[0]);
   const [faceTexture, setFaceTexture] = useState<string | null>(null);
@@ -18,16 +17,13 @@ export default function Avatar() {
   };
 
   const handleRefresh = () => {
-    // reset the camera. No Canvas remount needed.
     controlsRef.current?.reset();
   };
 
-  // Camera: stable Z, Y follows the model's yOffset so the camera lifts with the model.
   const cameraZ = 3.5;
-  const cameraY = 1.5 + (selectedModel.yOffset ?? 0);
-  const lookAtY = 1.2 + (selectedModel.yOffset ?? 0);
+  const cameraY = 1.2;
+  const lookAtY = 1.2;
 
-  // Canvas only remounts on model switch, not on refresh.
   const canvasKey = selectedModel.id;
 
   return (

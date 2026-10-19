@@ -7,10 +7,9 @@ import { useArmRelaxation } from '../../hooks/useArmRelaxation';
 import { useBlinkAnimation } from '../../hooks/useBlinkAnimation';
 import { useHeadAnimation } from '../../hooks/useHeadAnimation';
 import { useIdleBodyAnimation } from '../../hooks/useIdleBodyAnimation';
-import { inspectModel } from '../../utils/modelInspector';
-import { computeTargetHeight, useAutoFit } from '../../utils/modelNormalizer';
 import { useResetToTPose } from '../../hooks/useResetToTPose';
-
+import { inspectModel } from '../../utils/modelInspector';
+import { useAutoFit } from '../../utils/modelNormalizer';
 
 interface VrmModelProps {
   config: ModelConfig;
@@ -25,13 +24,17 @@ export default function VrmModel({ config, faceTextureUrl }: VrmModelProps) {
   const vrm = gltf.userData.vrm as VRM | undefined;
   const scene = vrm?.scene ?? gltf.scene;
 
-  useResetToTPose(vrm);          // 1. T-pose reset (useLayoutEffect)
-  useArmRelaxation(vrm);         // 2. relaxed arm pose (useLayoutEffect for initial, useFrame for sway)
-  useIdleBodyAnimation(vrm);     // 3. captures rest poses (useLayoutEffect)
-  useHeadAnimation(vrm);         // 4. captures rest poses (useLayoutEffect)
-  useAutoFit(scene, computeTargetHeight(config.zoomAdjust ?? 0));  // 5. NOW measures relaxed pose
-  useBlinkAnimation(vrm);        // 6. expression setup (useLayoutEffect, doesn't affect bbox)
+  // Compute target height inline (zoomAdjust is a multiplier offset on 1.6 base)
+  const zoomAdjust = config.zoomAdjust ?? 0;
+  const targetHeight = Math.max(0.2, 1.6 * (1 + zoomAdjust));
 
+  // Order matters: reset → pose → measure
+  useResetToTPose(vrm);
+  useIdleBodyAnimation(vrm);
+  useArmRelaxation(vrm);
+  useHeadAnimation(vrm);
+  useBlinkAnimation(vrm);
+  useAutoFit(scene, targetHeight, vrm);
 
   useEffect(() => {
     inspectModel(scene, vrm ? 'VRM' : 'GLTF (no VRM block found)', config.label);

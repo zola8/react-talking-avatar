@@ -22,6 +22,7 @@ export function useResetToTPose(vrm: VRM | undefined): void {
       }
     });
 
+    vrm.update(0);
     vrm.scene.updateMatrixWorld(true);
   }, [vrm]);
 }
