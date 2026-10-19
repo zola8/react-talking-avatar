@@ -10,21 +10,23 @@ export default function Avatar() {
   const [faceTexture, setFaceTexture] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const controlsRef = useRef<any>(null);
+  const [refreshCount, setRefreshCount] = useState(0);
 
+  const handleRefresh = () => {
+    setRefreshCount((c) => c + 1);
+  };
+
+  const canvasKey = `${selectedModel.id}-${refreshCount}`;
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setFaceTexture(URL.createObjectURL(file));
   };
 
-  const handleRefresh = () => {
-    controlsRef.current?.reset();
-  };
 
   const cameraZ = 3.5;
   const cameraY = 1.2;
   const lookAtY = 1.2;
 
-  const canvasKey = selectedModel.id;
 
   return (
     <div className="space-y-6">
