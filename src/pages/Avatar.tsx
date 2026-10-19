@@ -59,7 +59,8 @@ export default function Avatar() {
           <OrbitControls
             ref={controlsRef}
             target={[0, lookAtY, 0]}
-            enablePan={false}
+            enablePan={true}
+            panSpeed={0.5}
             minDistance={1.5}
             maxDistance={8}
             minPolarAngle={0.2}
