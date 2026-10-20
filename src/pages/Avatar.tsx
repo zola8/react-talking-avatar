@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react';
 import AvatarStage from '../components/AvatarStage';
 import ConversationTranscript from '../components/ConversationTranscript';
+import Icon from '../components/Icon';
 import ModelSelector from '../components/ModelSelector';
 import StatusPill from '../components/StatusPill';
 import VoiceInput from '../components/VoiceInput';
 import { MODELS, type ModelConfig } from '../config/models';
 import type { ConversationStatus, Message } from '../types/conversation';
-
 
 export default function Avatar() {
   const [selectedModel, setSelectedModel] = useState<ModelConfig>(MODELS[0]);
@@ -34,7 +34,7 @@ export default function Avatar() {
     // Transition to "thinking" state
     setStatus('thinking');
 
-    // PLACEHOLDER: simulate a delayed response. Will be replaced in step 2
+    // PLACEHOLDER: simulate a delayed response. Will be replaced in step 4+
     // with the real Azure STT + LLM + Azure TTS pipeline.
     setTimeout(() => {
       const aiMsg: Message = {
@@ -47,8 +47,6 @@ export default function Avatar() {
       setStatus('idle');
     }, 1200);
   };
-
-  const isLoading = status === 'thinking' || status === 'transcribing';
 
   return (
     <div className="space-y-6">
@@ -66,15 +64,16 @@ export default function Avatar() {
           />
           <button
             onClick={handleRefresh}
-            className="px-4 py-2 bg-stone-600 text-white rounded-lg hover:bg-stone-700 transition-colors font-medium"
+            className="px-4 py-2 bg-stone-600 text-white rounded-lg hover:bg-stone-700 transition-colors font-medium flex items-center gap-1.5"
             title="Reset camera view"
           >
-            Reset View
+            <Icon name="refresh" size={16} />
+            <span>Reset View</span>
           </button>
         </div>
       </div>
 
-      {/* Main: avatar + conversation side-by-side on desktop, stacked on mobile */}
+      {/* Main: avatar + conversation side-by-side on desktop */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         <div className="lg:col-span-3 h-[600px]">
           <AvatarStage
@@ -84,12 +83,12 @@ export default function Avatar() {
           />
         </div>
         <div className="lg:col-span-2 h-[600px]">
-          <ConversationTranscript messages={messages} isLoading={isLoading} />
+          <ConversationTranscript messages={messages} status={status} />
         </div>
       </div>
 
       {/* Footer: input */}
-      <VoiceInput onSubmit={handleInputSubmit} disabled={isLoading} />
+      <VoiceInput onSubmit={handleInputSubmit} status={status} />
     </div>
   );
 }

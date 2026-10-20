@@ -1,21 +1,31 @@
 import { useEffect, useRef } from 'react';
-import type { Message } from '../types/conversation';
+import type { ConversationStatus, Message } from '../types/conversation';
+import Icon from './Icon';
 
 
 interface ConversationTranscriptProps {
   messages: Message[];
-  isLoading: boolean;
+  status: ConversationStatus;
 }
 
-export default function ConversationTranscript({ messages, isLoading }: ConversationTranscriptProps) {
+const LOADING_TEXT: Partial<Record<ConversationStatus, string>> = {
+  transcribing: 'Transcribing your audio...',
+  thinking: 'Thinking...',
+  speaking: 'Speaking...',
+};
+
+export default function ConversationTranscript({ messages, status }: ConversationTranscriptProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when messages change
+  const isLoading =
+    status === 'transcribing' || status === 'thinking' || status === 'speaking';
+  const loadingText = LOADING_TEXT[status] ?? 'Loading...';
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isLoading]);
+  }, [messages, status]);
 
   return (
     <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 h-full flex flex-col">
@@ -38,15 +48,23 @@ export default function ConversationTranscript({ messages, isLoading }: Conversa
         {messages.map((m) => (
           <div
             key={m.id}
-            className={`p-2 rounded-lg text-sm leading-relaxed ${m.role === 'user'
-                ? 'bg-stone-100 text-stone-800 ml-8'
-                : 'bg-blue-50 text-blue-900 mr-8'
+            className={`flex gap-2 items-start ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'
               }`}
           >
-            <span className="block text-xs uppercase tracking-wide opacity-60 mb-1">
-              {m.role}
-            </span>
-            {m.text}
+            <div
+              className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center ${m.role === 'user' ? 'bg-stone-200 text-stone-700' : 'bg-blue-100 text-blue-700'
+                }`}
+            >
+              <Icon name={m.role === 'user' ? 'user' : 'bot'} size={16} />
+            </div>
+            <div
+              className={`p-2 rounded-lg text-sm leading-relaxed max-w-[80%] ${m.role === 'user'
+                  ? 'bg-stone-100 text-stone-800'
+                  : 'bg-blue-50 text-blue-900'
+                }`}
+            >
+              {m.text}
+            </div>
           </div>
         ))}
 
@@ -57,7 +75,7 @@ export default function ConversationTranscript({ messages, isLoading }: Conversa
               <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
               <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
-            <span className="text-sm">Thinking...</span>
+            <span className="text-sm">{loadingText}</span>
           </div>
         )}
       </div>
