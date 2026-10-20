@@ -6,6 +6,7 @@ import ModelSelector from '../components/ModelSelector';
 import StatusPill from '../components/StatusPill';
 import VoiceInput from '../components/VoiceInput';
 import { MODELS, type ModelConfig } from '../config/models';
+import { useCancellableTimeout } from '../hooks/useCancellableTimeout';
 import type { ConversationStatus, Message } from '../types/conversation';
 
 export default function Avatar() {
@@ -14,15 +15,13 @@ export default function Avatar() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<ConversationStatus>('idle');
   const controlsRef = useRef<any>(null);
+  const { schedule, cancel } = useCancellableTimeout();
 
-  const handleRefresh = () => {
-    setRefreshCount((c) => c + 1);
-  };
+  const handleRefresh = () => setRefreshCount((c) => c + 1);
 
   const handleInputSubmit = async (text: string, audioBlob?: Blob) => {
     console.log('[Avatar] Received:', { text, hasAudio: !!audioBlob });
 
-    // Add user message to transcript
     const userMsg: Message = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -30,13 +29,10 @@ export default function Avatar() {
       timestamp: Date.now(),
     };
     setMessages((prev) => [...prev, userMsg]);
-
-    // Transition to "thinking" state
     setStatus('thinking');
 
-    // PLACEHOLDER: simulate a delayed response. Will be replaced in step 4+
-    // with the real Azure STT + LLM + Azure TTS pipeline.
-    setTimeout(() => {
+    // PLACEHOLDER: simulated response. Replaced by real pipeline in steps 4+.
+    schedule(() => {
       const aiMsg: Message = {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -46,6 +42,16 @@ export default function Avatar() {
       setMessages((prev) => [...prev, aiMsg]);
       setStatus('idle');
     }, 1200);
+  };
+
+  const handleCancel = () => {
+    console.log('[Avatar] Cancelled');
+    cancel();
+    setStatus('idle');
+    // Note: we do NOT remove the user's already-added message — that's history.
+    // The assistant just never replies. If you'd rather remove the pending user
+    // message too, uncomment the next line:
+    // setMessages((prev) => prev.slice(0, -1));
   };
 
   return (
@@ -73,7 +79,7 @@ export default function Avatar() {
         </div>
       </div>
 
-      {/* Main: avatar + conversation side-by-side on desktop */}
+      {/* Main: avatar + conversation */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         <div className="lg:col-span-3 h-[600px]">
           <AvatarStage
@@ -88,7 +94,11 @@ export default function Avatar() {
       </div>
 
       {/* Footer: input */}
-      <VoiceInput onSubmit={handleInputSubmit} status={status} />
+      <VoiceInput
+        onSubmit={handleInputSubmit}
+        onCancel={handleCancel}
+        status={status}
+      />
     </div>
   );
 }

@@ -1,16 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { ConversationStatus } from '../types/conversation';
 import Icon from './Icon';
 
-
 interface VoiceInputProps {
   onSubmit: (text: string, audioBlob?: Blob) => void;
+  onCancel?: () => void;
   status?: ConversationStatus;
   disabled?: boolean;
 }
 
 export default function VoiceInput({
   onSubmit,
+  onCancel,
   status = 'idle',
   disabled = false,
 }: VoiceInputProps) {
@@ -23,21 +24,21 @@ export default function VoiceInput({
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
 
-  // Derive "busy" from status — true while waiting for AI/transcribing
   const isBusy =
     disabled ||
     status === 'thinking' ||
     status === 'transcribing' ||
     status === 'speaking';
 
-  // Sync local "listening" state with external "listening" status (so the mic
-  // button stays red if the parent sets status to 'listening')
+  // True when the parent can cancel (has an onCancel handler AND we're in a busy state)
+  const canCancel =
+    !!onCancel &&
+    (status === 'thinking' || status === 'transcribing' || status === 'speaking');
+
   useEffect(() => {
     if (status === 'listening' && !isRecording) {
-      // Parent says we should be listening — start
       handleMicClick();
     } else if (status !== 'listening' && isRecording) {
-      // Parent says we should stop — stop
       stopRecording();
       if (recognitionRef.current) {
         try {
@@ -50,7 +51,6 @@ export default function VoiceInput({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
-  // Check for speech recognition support
   useEffect(() => {
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -70,9 +70,7 @@ export default function VoiceInput({
         setText(transcript);
       };
 
-      recognition.onend = () => {
-        setIsListening(false);
-      };
+      recognition.onend = () => setIsListening(false);
 
       recognition.onerror = (event: any) => {
         console.error('[VoiceInput] Recognition error:', event.error);
@@ -86,9 +84,7 @@ export default function VoiceInput({
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
-        } catch (e) {
-          // Ignore cleanup errors
-        }
+        } catch (e) { }
       }
     };
   }, []);
@@ -104,7 +100,6 @@ export default function VoiceInput({
         : 'audio/webm';
 
       const recorder = new MediaRecorder(stream, { mimeType });
-
       recorder.ondataavailable = (event) => {
         if (event.data && event.data.size > 0) {
           audioChunksRef.current.push(event.data);
@@ -114,7 +109,6 @@ export default function VoiceInput({
       mediaRecorderRef.current = recorder;
       recorder.start(250);
       setIsRecording(true);
-      console.log('[VoiceInput] Recording started, mimeType:', mimeType);
     } catch (err) {
       console.error('[VoiceInput] Failed to start recording:', err);
     }
@@ -131,11 +125,7 @@ export default function VoiceInput({
     if (isRecording) {
       stopRecording();
       if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch (e) {
-          // Ignore
-        }
+        try { recognitionRef.current.stop(); } catch (e) { }
       }
     } else {
       startRecording();
@@ -159,12 +149,10 @@ export default function VoiceInput({
     if (audioChunksRef.current.length > 0) {
       const mimeType = mediaRecorderRef.current?.mimeType || 'audio/webm';
       audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-      console.log('[VoiceInput] Audio blob:', audioBlob.size, 'bytes', audioBlob.type);
     }
 
-    // Cleanup stream
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
     }
     audioChunksRef.current = [];
@@ -173,6 +161,11 @@ export default function VoiceInput({
       onSubmit(trimmed, audioBlob);
       setText('');
     }
+  };
+
+  const handleCancel = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onCancel?.();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -221,14 +214,26 @@ export default function VoiceInput({
         </button>
       )}
 
-      <button
-        type="submit"
-        disabled={isBusy || !text.trim()}
-        className="px-4 py-1.5 bg-stone-600 text-white rounded-md hover:bg-stone-700 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
-      >
-        <Icon name="send" size={16} />
-        <span>Send</span>
-      </button>
+      {canCancel ? (
+        <button
+          type="button"
+          onClick={handleCancel}
+          className="px-4 py-1.5 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors font-medium text-sm cursor-pointer flex items-center gap-1.5"
+          title="Stop"
+        >
+          <Icon name="stop" size={14} />
+          <span>Stop</span>
+        </button>
+      ) : (
+        <button
+          type="submit"
+          disabled={isBusy || !text.trim()}
+          className="px-4 py-1.5 bg-stone-600 text-white rounded-md hover:bg-stone-700 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
+        >
+          <Icon name="send" size={16} />
+          <span>Send</span>
+        </button>
+      )}
     </form>
   );
 }
