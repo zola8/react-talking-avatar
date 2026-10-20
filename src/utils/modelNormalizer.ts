@@ -59,7 +59,7 @@ export function useAutoFit(object: Object3D, targetHeight = 1.6, vrm?: VRM): voi
     object.scale.setScalar(scale);
     object.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
 
-    console.log('[AutoFit] posed size:', size.toArray());
-    console.log('[AutoFit] scale:', scale, 'position:', object.position.toArray());
+    // console.log('[AutoFit] posed size:', size.toArray());
+    // console.log('[AutoFit] scale:', scale, 'position:', object.position.toArray());
   }, [object, targetHeight, vrm]);
 }

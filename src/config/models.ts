@@ -34,7 +34,7 @@ export const MODELS: ModelConfig[] = [
     url: '/models/CuteMoth.vrm',
     format: 'vrm',
     rotation: [0, Math.PI, 0],
-    yOffset: -0.4,
+    yOffset: -1.4,
     zoomAdjust: -0.3,
   },
   {
@@ -61,7 +61,7 @@ export const MODELS: ModelConfig[] = [
     url: '/models/two-tails.vrm',
     format: 'vrm',
     rotation: [0, Math.PI, 0],
-    yOffset: -0.8,
+    yOffset: -0.2,
     zoomAdjust: -0.1,
   },
   {

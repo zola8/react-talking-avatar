@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import type { ModelConfig } from '../../config/models';
 import { disposeObject } from '../../utils/modelDisposer';
-import { inspectModel } from '../../utils/modelInspector';
 import { useAutoFit } from '../../utils/modelNormalizer';
 
 
@@ -23,7 +22,7 @@ export default function GlbModel({ config, faceTextureUrl }: GlbModelProps) {
   useAutoFit(scene, targetHeight);
 
   useEffect(() => {
-    inspectModel(scene, 'GLB', config.label);
+    // inspectModel(scene, 'GLB', config.label);
     return () => disposeObject(scene);
   }, [scene, config.label]);
 

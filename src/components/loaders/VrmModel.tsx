@@ -8,7 +8,6 @@ import { useBlinkAnimation } from '../../hooks/useBlinkAnimation';
 import { useHeadAnimation } from '../../hooks/useHeadAnimation';
 import { useIdleBodyAnimation } from '../../hooks/useIdleBodyAnimation';
 import { useResetToTPose } from '../../hooks/useResetToTPose';
-import { inspectModel } from '../../utils/modelInspector';
 import { useAutoFit } from '../../utils/modelNormalizer';
 
 interface VrmModelProps {
@@ -37,7 +36,7 @@ export default function VrmModel({ config, faceTextureUrl }: VrmModelProps) {
   useAutoFit(scene, targetHeight, vrm);
 
   useEffect(() => {
-    inspectModel(scene, vrm ? 'VRM' : 'GLTF (no VRM block found)', config.label);
+    // inspectModel(scene, vrm ? 'VRM' : 'GLTF (no VRM block found)', config.label);
     return () => (vrm ? VRMUtils.deepDispose(vrm.scene) : undefined);
   }, [scene, vrm, config.label]);
 

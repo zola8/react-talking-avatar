@@ -32,9 +32,9 @@ export function useBlinkAnimation(vrm: VRM | undefined): void {
     if (!state.rightPreset && expressions['Blink_R']) state.rightPreset = 'Blink_R';
     if (!state.bothPreset && expressions['Blink']) state.bothPreset = 'Blink';
 
-    const hasBlinks = state.leftPreset || state.rightPreset || state.bothPreset;
-    console.log(`[Blink] Presets: L=${state.leftPreset}, R=${state.rightPreset}, Both=${state.bothPreset}`);
-    console.log(`[Blink] ${hasBlinks ? 'Enabled' : 'No blink expressions found'}`);
+    // const hasBlinks = state.leftPreset || state.rightPreset || state.bothPreset;
+    // console.log(`[Blink] Presets: L=${state.leftPreset}, R=${state.rightPreset}, Both=${state.bothPreset}`);
+    // console.log(`[Blink] ${hasBlinks ? 'Enabled' : 'No blink expressions found'}`);
   }, [vrm]);
 
   useFrame((state, delta) => {

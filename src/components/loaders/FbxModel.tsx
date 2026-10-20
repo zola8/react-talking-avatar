@@ -1,10 +1,9 @@
-import { useEffect } from 'react';
 import { useLoader } from '@react-three/fiber';
+import { useEffect } from 'react';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
-import { useAutoFit } from '../../utils/modelNormalizer';
-import { inspectModel } from '../../utils/modelInspector';
-import { disposeObject } from '../../utils/modelDisposer';
 import type { ModelConfig } from '../../config/models';
+import { disposeObject } from '../../utils/modelDisposer';
+import { useAutoFit } from '../../utils/modelNormalizer';
 
 
 interface FbxModelProps {
@@ -19,7 +18,7 @@ export default function FbxModel({ config, faceTextureUrl }: FbxModelProps) {
   useAutoFit(scene);
 
   useEffect(() => {
-    inspectModel(scene, 'FBX', config.label);
+    // inspectModel(scene, 'FBX', config.label);
     return () => disposeObject(scene);
   }, [scene, config.label]);
 
