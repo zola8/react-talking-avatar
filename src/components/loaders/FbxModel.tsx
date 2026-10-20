@@ -2,25 +2,30 @@ import { useLoader } from '@react-three/fiber';
 import { useEffect } from 'react';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import type { ModelConfig } from '../../config/models';
+import type { ConversationStatus } from '../../types/conversation';
 import { disposeObject } from '../../utils/modelDisposer';
 import { useAutoFit } from '../../utils/modelNormalizer';
-
 
 interface FbxModelProps {
   config: ModelConfig;
   faceTextureUrl?: string | null;
+  status?: ConversationStatus;
 }
 
+export default function FbxModel({ config, faceTextureUrl, status }: FbxModelProps) {
+  // FBX might have a skeleton, but we don't currently animate it.
+  // Kept in props for interface consistency.
+  
+  void status;
+  void faceTextureUrl;
 
-export default function FbxModel({ config, faceTextureUrl }: FbxModelProps) {
   const scene = useLoader(FBXLoader, config.url);
 
   useAutoFit(scene);
 
   useEffect(() => {
-    // inspectModel(scene, 'FBX', config.label);
     return () => disposeObject(scene);
-  }, [scene, config.label]);
+  }, [scene]);
 
   const rotation = config.rotation ?? [0, 0, 0];
   const yOffset = config.yOffset ?? 0;

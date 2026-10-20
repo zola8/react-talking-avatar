@@ -145,6 +145,7 @@ export default function Avatar() {
             config={selectedModel}
             refreshCount={refreshCount}
             controlsRef={controlsRef}
+            status={status} 
           />
         </div>
         <div className="lg:col-span-2 h-[600px]">

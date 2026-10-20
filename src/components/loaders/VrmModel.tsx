@@ -8,14 +8,17 @@ import { useBlinkAnimation } from '../../hooks/useBlinkAnimation';
 import { useHeadAnimation } from '../../hooks/useHeadAnimation';
 import { useIdleBodyAnimation } from '../../hooks/useIdleBodyAnimation';
 import { useResetToTPose } from '../../hooks/useResetToTPose';
+import type { ConversationStatus } from '../../types/conversation';
+//import { inspectModel } from '../../utils/modelInspector';
 import { useAutoFit } from '../../utils/modelNormalizer';
 
 interface VrmModelProps {
   config: ModelConfig;
   faceTextureUrl?: string | null;
+  status?: ConversationStatus;
 }
 
-export default function VrmModel({ config, faceTextureUrl }: VrmModelProps) {
+export default function VrmModel({ config, faceTextureUrl, status }: VrmModelProps) {
   const gltf = useLoader(GLTFLoader, config.url, (loader) => {
     loader.register((parser) => new VRMLoaderPlugin(parser));
   });
@@ -23,15 +26,13 @@ export default function VrmModel({ config, faceTextureUrl }: VrmModelProps) {
   const vrm = gltf.userData.vrm as VRM | undefined;
   const scene = vrm?.scene ?? gltf.scene;
 
-  // Compute target height inline (zoomAdjust is a multiplier offset on 1.6 base)
   const zoomAdjust = config.zoomAdjust ?? 0;
   const targetHeight = Math.max(0.2, 1.6 * (1 + zoomAdjust));
 
-  // Order matters: reset → pose → measure
   useResetToTPose(vrm);
   useIdleBodyAnimation(vrm);
   useArmRelaxation(vrm);
-  useHeadAnimation(vrm);
+  useHeadAnimation(vrm, status);          // ← pass status
   useBlinkAnimation(vrm);
   useAutoFit(scene, targetHeight, vrm);
 

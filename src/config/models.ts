@@ -20,7 +20,7 @@ export const MODELS: ModelConfig[] = [
     format: 'vrm',
     rotation: [0, Math.PI, 0],
     yOffset: 1.0,
-    zoomAdjust: 0,
+    zoomAdjust: 0.3,
     voice: {
       language: 'en-US',
       voiceName: 'en-US-DavisNeural',
@@ -33,7 +33,7 @@ export const MODELS: ModelConfig[] = [
     format: 'vrm',
     rotation: [0, Math.PI, 0],
     yOffset: 1.0,
-    zoomAdjust: 0,
+    zoomAdjust: 0.3,
     voice: {
       language: 'en-US',
       voiceName: 'en-US-AriaNeural',

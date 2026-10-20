@@ -2,8 +2,8 @@ import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import type { Ref } from 'react';
 import type { ModelConfig } from '../config/models';
+import type { ConversationStatus } from '../types/conversation';
 import UniversalModel from './UniversalModel';
-
 
 interface AvatarStageProps {
   config: ModelConfig;
@@ -14,6 +14,7 @@ interface AvatarStageProps {
   lookAtY?: number;
   controlsRef?: Ref<any>;
   className?: string;
+  status?: ConversationStatus;
 }
 
 export default function AvatarStage({
@@ -25,6 +26,7 @@ export default function AvatarStage({
   lookAtY = 1.2,
   controlsRef,
   className,
+  status,
 }: AvatarStageProps) {
   const canvasKey = `${config.id}-${refreshCount}`;
 
@@ -38,7 +40,11 @@ export default function AvatarStage({
       >
         <ambientLight intensity={0.7} />
         <directionalLight position={[5, 8, 5]} intensity={1.2} />
-        <UniversalModel config={config} faceTextureUrl={faceTextureUrl ?? null} />
+        <UniversalModel
+          config={config}
+          faceTextureUrl={faceTextureUrl}
+          status={status}
+        />
         <OrbitControls
           ref={controlsRef}
           target={[0, lookAtY, 0]}
