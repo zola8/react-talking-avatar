@@ -19,8 +19,8 @@ export default function Avatar() {
 
   const handleRefresh = () => setRefreshCount((c) => c + 1);
 
-  const handleInputSubmit = async (text: string, audioBlob?: Blob) => {
-    console.log('[Avatar] Received:', { text, hasAudio: !!audioBlob });
+  const handleTextSubmit = async (text: string) => {
+    console.log('[Avatar] Received text:', text);
 
     const userMsg: Message = {
       id: crypto.randomUUID(),
@@ -31,7 +31,7 @@ export default function Avatar() {
     setMessages((prev) => [...prev, userMsg]);
     setStatus('thinking');
 
-    // PLACEHOLDER: simulated response. Replaced by real pipeline in steps 4+.
+    // PLACEHOLDER: simulated response. Replaced by LLM in step 5.
     schedule(() => {
       const aiMsg: Message = {
         id: crypto.randomUUID(),
@@ -48,10 +48,6 @@ export default function Avatar() {
     console.log('[Avatar] Cancelled');
     cancel();
     setStatus('idle');
-    // Note: we do NOT remove the user's already-added message — that's history.
-    // The assistant just never replies. If you'd rather remove the pending user
-    // message too, uncomment the next line:
-    // setMessages((prev) => prev.slice(0, -1));
   };
 
   return (
@@ -95,7 +91,7 @@ export default function Avatar() {
 
       {/* Footer: input */}
       <VoiceInput
-        onSubmit={handleInputSubmit}
+        onTextSubmit={handleTextSubmit}
         onCancel={handleCancel}
         status={status}
       />
