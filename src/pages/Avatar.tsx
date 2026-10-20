@@ -19,6 +19,12 @@ export default function Avatar() {
 
   const handleRefresh = () => setRefreshCount((c) => c + 1);
 
+  const handleClearHistory = () => {
+    cancel();
+    setStatus('idle');
+    setMessages([]);
+  };
+
   const handleTextSubmit = async (text: string) => {
     console.log('[Avatar] Received text:', text);
 
@@ -56,7 +62,9 @@ export default function Avatar() {
       <div className="flex flex-wrap justify-between items-center gap-4">
         <div className="flex items-center gap-4">
           <h1 className="text-3xl font-bold text-gray-800">The Avatar</h1>
-          <StatusPill status={status} />
+          <div className="mt-2">
+            <StatusPill status={status} />
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -85,7 +93,11 @@ export default function Avatar() {
           />
         </div>
         <div className="lg:col-span-2 h-[600px]">
-          <ConversationTranscript messages={messages} status={status} />
+          <ConversationTranscript
+            messages={messages}
+            status={status}
+            onClearHistory={handleClearHistory}
+          />
         </div>
       </div>
 

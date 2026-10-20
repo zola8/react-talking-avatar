@@ -20,7 +20,6 @@ export default function VoiceInput({
   const [text, setText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
 
-  // Azure auth + recognition
   const { token, region, isLoading: tokenLoading, error: tokenError } = useAzureToken();
   const {
     startListening,
@@ -32,8 +31,6 @@ export default function VoiceInput({
   } = useAzureSpeechRecognition({ token, region, enabled: !!token });
 
   // Sync text field from Azure transcripts
-  // - While listening: show partial transcript
-  // - After stop: show final accumulated transcript
   useEffect(() => {
     if (isListening && partialTranscript) {
       setText(partialTranscript);
@@ -42,7 +39,7 @@ export default function VoiceInput({
     }
   }, [isListening, partialTranscript, finalTranscript]);
 
-  // Stop listening if user transitions to a busy state (e.g. thinking)
+  // Stop listening if user transitions to a busy state
   useEffect(() => {
     if (isRecording && (status === 'thinking' || status === 'speaking')) {
       stopListening();
@@ -79,13 +76,21 @@ export default function VoiceInput({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleClear = () => {
+    setText('');
+    // If currently recording, stop and reset the Azure recognizer state too
+    if (isRecording) {
+      stopListening();
+      setIsRecording(false);
+    }
+  };
+
+  const handleSubmit = (e: React.SubmitEvent) => {
     e.preventDefault();
     if (isBusy) return;
     const trimmed = text.trim();
     if (!trimmed) return;
 
-    // If still recording, stop and use whatever final transcript we have
     if (isRecording) {
       stopListening();
       setIsRecording(false);
@@ -109,6 +114,9 @@ export default function VoiceInput({
 
   const error = tokenError ?? recognitionError;
 
+  // Show clear (X) button when there's text OR while listening with partial transcript
+  const showClear = (text.length > 0 || (isListening && partialTranscript.length > 0)) && !isBusy;
+
   return (
     <div className="space-y-1">
       {tokenLoading && (
@@ -121,8 +129,8 @@ export default function VoiceInput({
       <form
         onSubmit={handleSubmit}
         className={`flex items-center gap-2 bg-white border rounded-lg shadow-sm px-3 py-2 transition-colors ${isRecording
-            ? 'border-red-300 ring-2 ring-red-200'
-            : 'border-gray-300 focus-within:ring-2 focus-within:ring-stone-500'
+          ? 'border-red-300 ring-2 ring-red-200'
+          : 'border-gray-300 focus-within:ring-2 focus-within:ring-stone-500'
           }`}
       >
         <input
@@ -139,13 +147,24 @@ export default function VoiceInput({
           className="flex-1 bg-transparent outline-none text-gray-800 placeholder-gray-400 disabled:opacity-50"
         />
 
+        {showClear && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            title="Clear input"
+          >
+            <Icon name="x" size={16} />
+          </button>
+        )}
+
         <button
           type="button"
           onClick={handleMicClick}
           disabled={micDisabled}
           className={`p-2 rounded-full transition-colors disabled:opacity-50 ${isRecording
-              ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
+            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           title={
             tokenLoading

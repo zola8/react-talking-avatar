@@ -1,11 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ConversationStatus, Message } from '../types/conversation';
 import Icon from './Icon';
-
 
 interface ConversationTranscriptProps {
   messages: Message[];
   status: ConversationStatus;
+  onClearHistory?: () => void;
 }
 
 const LOADING_TEXT: Partial<Record<ConversationStatus, string>> = {
@@ -14,8 +14,14 @@ const LOADING_TEXT: Partial<Record<ConversationStatus, string>> = {
   speaking: 'Speaking...',
 };
 
-export default function ConversationTranscript({ messages, status }: ConversationTranscriptProps) {
+export default function ConversationTranscript({
+  messages,
+  status,
+  onClearHistory,
+}: ConversationTranscriptProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [confirming, setConfirming] = useState(false);
+  const confirmTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isLoading =
     status === 'transcribing' || status === 'thinking' || status === 'speaking';
@@ -27,12 +33,65 @@ export default function ConversationTranscript({ messages, status }: Conversatio
     }
   }, [messages, status]);
 
+  // Reset confirm state when history is cleared or becomes empty
+  useEffect(() => {
+    if (messages.length === 0) {
+      setConfirming(false);
+      if (confirmTimeoutRef.current) {
+        clearTimeout(confirmTimeoutRef.current);
+        confirmTimeoutRef.current = null;
+      }
+    }
+  }, [messages.length]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
+    };
+  }, []);
+
+  const handleClearClick = () => {
+    if (confirming) {
+      // Second click: confirm
+      if (confirmTimeoutRef.current) {
+        clearTimeout(confirmTimeoutRef.current);
+        confirmTimeoutRef.current = null;
+      }
+      setConfirming(false);
+      onClearHistory?.();
+    } else {
+      // First click: enter confirm state, auto-revert after 3s
+      setConfirming(true);
+      confirmTimeoutRef.current = setTimeout(() => {
+        setConfirming(false);
+        confirmTimeoutRef.current = null;
+      }, 3000);
+    }
+  };
+
+  const canClear = !!onClearHistory && messages.length > 0 && !isLoading;
+
   return (
     <div className="bg-white border border-gray-300 rounded-lg shadow-sm p-4 h-full flex flex-col">
-      <div className="flex justify-between items-start gap-3 mb-2">
+      <div className="flex justify-between items-center gap-3 mb-2">
         <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
           Conversation
         </span>
+        {canClear && (
+          <button
+            type="button"
+            onClick={handleClearClick}
+            className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${confirming
+                ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                : 'text-gray-500 hover:bg-gray-100'
+              }`}
+            title={confirming ? 'Click again to confirm' : 'Clear conversation'}
+          >
+            <Icon name="x" size={12} />
+            <span>{confirming ? 'Confirm?' : 'Clear'}</span>
+          </button>
+        )}
       </div>
 
       <div
@@ -52,7 +111,9 @@ export default function ConversationTranscript({ messages, status }: Conversatio
               }`}
           >
             <div
-              className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center ${m.role === 'user' ? 'bg-stone-200 text-stone-700' : 'bg-blue-100 text-blue-700'
+              className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center ${m.role === 'user'
+                  ? 'bg-stone-200 text-stone-700'
+                  : 'bg-blue-100 text-blue-700'
                 }`}
             >
               <Icon name={m.role === 'user' ? 'user' : 'bot'} size={16} />

@@ -10,7 +10,8 @@ type IconName =
   | 'speaker-off'
   | 'chevron-down'
   | 'user'
-  | 'bot';
+  | 'bot'
+  | 'x';
 
 interface IconProps extends SVGProps<SVGSVGElement> {
   name: IconName;
@@ -79,6 +80,12 @@ const PATHS: Record<IconName, JSX.Element> = {
       <line x1="16" y1="16" x2="16" y2="16" />
     </>
   ),
+  x: (
+    <>
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </>
+  ),
 };
 
 const ICON_VIEWBOX: Record<IconName, string> = {
@@ -92,6 +99,7 @@ const ICON_VIEWBOX: Record<IconName, string> = {
   'chevron-down': '0 0 24 24',
   user: '0 0 24 24',
   bot: '0 0 24 24',
+  x: '0 0 24 24',
 };
 
 export default function Icon({ name, size = 20, ...props }: IconProps) {
