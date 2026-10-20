@@ -6,6 +6,7 @@ interface ConversationTranscriptProps {
   messages: Message[];
   status: ConversationStatus;
   onClearHistory?: () => void;
+  speakingMessageId?: string | null;
 }
 
 const LOADING_TEXT: Partial<Record<ConversationStatus, string>> = {
@@ -18,6 +19,7 @@ export default function ConversationTranscript({
   messages,
   status,
   onClearHistory,
+  speakingMessageId,
 }: ConversationTranscriptProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [confirming, setConfirming] = useState(false);
@@ -33,7 +35,6 @@ export default function ConversationTranscript({
     }
   }, [messages, status]);
 
-  // Reset confirm state when history is cleared or becomes empty
   useEffect(() => {
     if (messages.length === 0) {
       setConfirming(false);
@@ -44,7 +45,6 @@ export default function ConversationTranscript({
     }
   }, [messages.length]);
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
@@ -53,7 +53,6 @@ export default function ConversationTranscript({
 
   const handleClearClick = () => {
     if (confirming) {
-      // Second click: confirm
       if (confirmTimeoutRef.current) {
         clearTimeout(confirmTimeoutRef.current);
         confirmTimeoutRef.current = null;
@@ -61,7 +60,6 @@ export default function ConversationTranscript({
       setConfirming(false);
       onClearHistory?.();
     } else {
-      // First click: enter confirm state, auto-revert after 3s
       setConfirming(true);
       confirmTimeoutRef.current = setTimeout(() => {
         setConfirming(false);
@@ -83,8 +81,8 @@ export default function ConversationTranscript({
             type="button"
             onClick={handleClearClick}
             className={`flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors ${confirming
-                ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                : 'text-gray-500 hover:bg-gray-100'
+              ? 'bg-red-100 text-red-700 hover:bg-red-200'
+              : 'text-gray-500 hover:bg-gray-100'
               }`}
             title={confirming ? 'Click again to confirm' : 'Clear conversation'}
           >
@@ -104,30 +102,38 @@ export default function ConversationTranscript({
           </p>
         )}
 
-        {messages.map((m) => (
-          <div
-            key={m.id}
-            className={`flex gap-2 items-start ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-              }`}
-          >
+        {messages.map((m) => {
+          const isSpeaking = speakingMessageId === m.id;
+          return (
             <div
-              className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center ${m.role === 'user'
-                  ? 'bg-stone-200 text-stone-700'
-                  : 'bg-blue-100 text-blue-700'
+              key={m.id}
+              className={`flex gap-2 items-start ${m.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                 }`}
             >
-              <Icon name={m.role === 'user' ? 'user' : 'bot'} size={16} />
-            </div>
-            <div
-              className={`p-2 rounded-lg text-sm leading-relaxed max-w-[80%] ${m.role === 'user'
+              <div
+                className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-colors ${m.role === 'user'
+                  ? 'bg-stone-200 text-stone-700'
+                  : isSpeaking
+                    ? 'bg-green-200 text-green-700 animate-pulse'
+                    : 'bg-blue-100 text-blue-700'
+                  }`}
+              >
+                <Icon
+                  name={m.role === 'user' ? 'user' : isSpeaking ? 'speaker' : 'bot'}
+                  size={16}
+                />
+              </div>
+              <div
+                className={`p-2 rounded-lg text-sm leading-relaxed max-w-[80%] ${m.role === 'user'
                   ? 'bg-stone-100 text-stone-800'
                   : 'bg-blue-50 text-blue-900'
-                }`}
-            >
-              {m.text}
+                  }`}
+              >
+                {m.text}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {isLoading && (
           <div className="flex items-center gap-2 text-gray-400">

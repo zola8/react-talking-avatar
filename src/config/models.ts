@@ -6,8 +6,11 @@ export interface ModelConfig {
   rotation?: [number, number, number];
   yOffset?: number;
   zoomAdjust?: number;
+  voice: {
+    language: string;
+    voiceName: string;
+  };
 }
-
 
 export const MODELS: ModelConfig[] = [
   {
@@ -18,6 +21,10 @@ export const MODELS: ModelConfig[] = [
     rotation: [0, Math.PI, 0],
     yOffset: 1.0,
     zoomAdjust: 0,
+    voice: {
+      language: 'en-US',
+      voiceName: 'en-US-DavisNeural',
+    },
   },
   {
     id: 'girl2',
@@ -27,6 +34,10 @@ export const MODELS: ModelConfig[] = [
     rotation: [0, Math.PI, 0],
     yOffset: 1.0,
     zoomAdjust: 0,
+    voice: {
+      language: 'en-US',
+      voiceName: 'en-US-AriaNeural',
+    },
   },
   {
     id: 'cute-moth',
@@ -36,6 +47,10 @@ export const MODELS: ModelConfig[] = [
     rotation: [0, Math.PI, 0],
     yOffset: -1.4,
     zoomAdjust: -0.3,
+    voice: {
+      language: 'en-US',
+      voiceName: 'en-US-JennyNeural',
+    },
   },
   {
     id: 'juanita',
@@ -45,6 +60,10 @@ export const MODELS: ModelConfig[] = [
     rotation: [0, Math.PI, 0],
     yOffset: 0,
     zoomAdjust: -0.2,
+    voice: {
+      language: 'en-US',
+      voiceName: 'en-US-AriaNeural',
+    },
   },
   {
     id: 'lady-fawn',
@@ -54,6 +73,10 @@ export const MODELS: ModelConfig[] = [
     rotation: [0, Math.PI, 0],
     yOffset: -0.7,
     zoomAdjust: 0.1,
+    voice: {
+      language: 'en-US',
+      voiceName: 'en-US-MichelleNeural',
+    },
   },
   {
     id: 'two-tails',
@@ -63,6 +86,10 @@ export const MODELS: ModelConfig[] = [
     rotation: [0, Math.PI, 0],
     yOffset: -0.2,
     zoomAdjust: -0.1,
+    voice: {
+      language: 'en-US',
+      voiceName: 'en-US-DavisNeural',
+    },
   },
   {
     id: 'labrador',
@@ -72,5 +99,9 @@ export const MODELS: ModelConfig[] = [
     rotation: [0, 0, 0],
     yOffset: 0.2,
     zoomAdjust: -0.1,
+    voice: {
+      language: 'en-US',
+      voiceName: 'en-US-DavisNeural',
+    },
   },
 ];

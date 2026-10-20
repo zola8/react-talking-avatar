@@ -6,7 +6,9 @@ import ModelSelector from '../components/ModelSelector';
 import StatusPill from '../components/StatusPill';
 import VoiceInput from '../components/VoiceInput';
 import { MODELS, type ModelConfig } from '../config/models';
-import { useCancellableTimeout } from '../hooks/useCancellableTimeout';
+import { useAzureToken } from '../hooks/useAzureToken';
+import { speakText, stopSpeaking } from '../services/azureTTS';
+import { generateMockResponse } from '../services/mockLLM';
 import type { ConversationStatus, Message } from '../types/conversation';
 
 export default function Avatar() {
@@ -14,20 +16,31 @@ export default function Avatar() {
   const [refreshCount, setRefreshCount] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<ConversationStatus>('idle');
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const controlsRef = useRef<any>(null);
-  const { schedule, cancel } = useCancellableTimeout();
+  const turnIdRef = useRef<string | null>(null);
+
+  // Shared Azure auth token — used for both STT (VoiceInput) and TTS (Avatar)
+  const { token, region } = useAzureToken();
 
   const handleRefresh = () => setRefreshCount((c) => c + 1);
 
   const handleClearHistory = () => {
-    cancel();
+    turnIdRef.current = null;        // invalidate any in-flight turn
+    stopSpeaking();
     setStatus('idle');
+    setSpeakingMessageId(null);
     setMessages([]);
   };
 
   const handleTextSubmit = async (text: string) => {
     console.log('[Avatar] Received text:', text);
 
+    // Assign a unique ID to this conversation turn so we can cancel it cleanly
+    const turnId = crypto.randomUUID();
+    turnIdRef.current = turnId;
+
+    // 1. Add user message
     const userMsg: Message = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -37,23 +50,65 @@ export default function Avatar() {
     setMessages((prev) => [...prev, userMsg]);
     setStatus('thinking');
 
-    // PLACEHOLDER: simulated response. Replaced by LLM in step 5.
-    schedule(() => {
+    try {
+      // 2. Call mock LLM
+      const response = await generateMockResponse(text);
+
+      // Check if cancelled during "thinking"
+      if (turnIdRef.current !== turnId) {
+        console.log('[Avatar] Cancelled during thinking');
+        return;
+      }
+
+      // 3. Add assistant message
       const aiMsg: Message = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        text: `You said: "${text}"`,
+        text: response.text,
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, aiMsg]);
-      setStatus('idle');
-    }, 1200);
+
+      // 4. Speak via Azure TTS
+      if (token) {
+        setStatus('speaking');
+        setSpeakingMessageId(aiMsg.id);
+
+        await speakText({
+          text: response.text,
+          token,
+          region,
+          language: selectedModel.voice.language,
+          voiceName: selectedModel.voice.voiceName,
+          onError: (err) => console.error('[Avatar] TTS error:', err),
+        });
+
+        // Check if cancelled during speaking
+        if (turnIdRef.current !== turnId) {
+          console.log('[Avatar] Cancelled during speaking');
+          return;
+        }
+      } else {
+        console.warn('[Avatar] No token available, skipping TTS');
+      }
+    } catch (err) {
+      console.error('[Avatar] Pipeline error:', err);
+    } finally {
+      // Only reset state if this turn is still the active one
+      if (turnIdRef.current === turnId) {
+        setStatus('idle');
+        setSpeakingMessageId(null);
+        turnIdRef.current = null;
+      }
+    }
   };
 
   const handleCancel = () => {
     console.log('[Avatar] Cancelled');
-    cancel();
+    turnIdRef.current = null;        // invalidate the current turn
+    stopSpeaking();
     setStatus('idle');
+    setSpeakingMessageId(null);
   };
 
   return (
@@ -97,6 +152,7 @@ export default function Avatar() {
             messages={messages}
             status={status}
             onClearHistory={handleClearHistory}
+            speakingMessageId={speakingMessageId}
           />
         </div>
       </div>
@@ -106,6 +162,8 @@ export default function Avatar() {
         onTextSubmit={handleTextSubmit}
         onCancel={handleCancel}
         status={status}
+        token={token}
+        region={region}
       />
     </div>
   );

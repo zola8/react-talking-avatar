@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useAzureSpeechRecognition } from '../hooks/useAzureSpeechRecognition';
-import { useAzureToken } from '../hooks/useAzureToken';
 import type { ConversationStatus } from '../types/conversation';
 import Icon from './Icon';
 
@@ -9,6 +8,8 @@ interface VoiceInputProps {
   onCancel?: () => void;
   status?: ConversationStatus;
   disabled?: boolean;
+  token: string | null;
+  region: string;
 }
 
 export default function VoiceInput({
@@ -16,11 +17,12 @@ export default function VoiceInput({
   onCancel,
   status = 'idle',
   disabled = false,
+  token,
+  region,
 }: VoiceInputProps) {
   const [text, setText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
 
-  const { token, region, isLoading: tokenLoading, error: tokenError } = useAzureToken();
   const {
     startListening,
     stopListening,
@@ -64,6 +66,7 @@ export default function VoiceInput({
     !!onCancel &&
     (status === 'thinking' || status === 'transcribing' || status === 'speaking');
 
+  const tokenLoading = !token && !recognitionError;
   const micDisabled = isBusy || tokenLoading || !token;
 
   const handleMicClick = async () => {
@@ -78,7 +81,6 @@ export default function VoiceInput({
 
   const handleClear = () => {
     setText('');
-    // If currently recording, stop and reset the Azure recognizer state too
     if (isRecording) {
       stopListening();
       setIsRecording(false);
@@ -112,9 +114,6 @@ export default function VoiceInput({
     }
   };
 
-  const error = tokenError ?? recognitionError;
-
-  // Show clear (X) button when there's text OR while listening with partial transcript
   const showClear = (text.length > 0 || (isListening && partialTranscript.length > 0)) && !isBusy;
 
   return (
@@ -122,15 +121,15 @@ export default function VoiceInput({
       {tokenLoading && (
         <p className="text-xs text-gray-500">Connecting to Azure Speech...</p>
       )}
-      {error && (
-        <p className="text-xs text-red-500">⚠ {error}</p>
+      {recognitionError && (
+        <p className="text-xs text-red-500">⚠ {recognitionError}</p>
       )}
 
       <form
         onSubmit={handleSubmit}
         className={`flex items-center gap-2 bg-white border rounded-lg shadow-sm px-3 py-2 transition-colors ${isRecording
-          ? 'border-red-300 ring-2 ring-red-200'
-          : 'border-gray-300 focus-within:ring-2 focus-within:ring-stone-500'
+            ? 'border-red-300 ring-2 ring-red-200'
+            : 'border-gray-300 focus-within:ring-2 focus-within:ring-stone-500'
           }`}
       >
         <input
@@ -163,8 +162,8 @@ export default function VoiceInput({
           onClick={handleMicClick}
           disabled={micDisabled}
           className={`p-2 rounded-full transition-colors disabled:opacity-50 ${isRecording
-            ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
-            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
+              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           title={
             tokenLoading
