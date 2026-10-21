@@ -1,23 +1,24 @@
 import * as SpeechSDK from 'microsoft-cognitiveservices-speech-sdk';
+import {
+  type LipSyncController,
+  resetLipSyncController,
+} from '../types/viseme';
 
 
 export interface SpeakOptions {
   text: string;
   token: string;
   region: string;
-  language: string;        // e.g. 'en-US'
-  voiceName: string;        // e.g. 'en-US-AriaNeural'
+  language: string;
+  voiceName: string;
+  lipSyncController?: LipSyncController;
   onAudioStarted?: () => void;
   onAudioEnded?: () => void;
   onError?: (err: string) => void;
 }
 
-// Track the active synthesizer so we can cancel mid-speech
 let activeSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
 
-/**
- * Stop any currently-active TTS playback.
- */
 export function stopSpeaking(): void {
   if (activeSynthesizer) {
     try {
@@ -29,10 +30,6 @@ export function stopSpeaking(): void {
   }
 }
 
-/**
- * Speak the given text using Azure Speech Synthesis.
- * Plays audio through the default speaker output.
- */
 export async function speakText(opts: SpeakOptions): Promise<void> {
   const {
     text,
@@ -40,6 +37,7 @@ export async function speakText(opts: SpeakOptions): Promise<void> {
     region,
     language,
     voiceName,
+    lipSyncController,
     onAudioStarted,
     onAudioEnded,
     onError,
@@ -47,8 +45,11 @@ export async function speakText(opts: SpeakOptions): Promise<void> {
 
   if (!text.trim()) return;
 
-  // Stop any existing speech
   stopSpeaking();
+
+  if (lipSyncController) {
+    resetLipSyncController(lipSyncController);
+  }
 
   try {
     const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(token, region);
@@ -62,11 +63,22 @@ export async function speakText(opts: SpeakOptions): Promise<void> {
     let audioStarted = false;
 
     return new Promise<void>((resolve) => {
-      // synthesizing fires when audio chunks start arriving
+      synthesizer.visemeReceived = (_s, e) => {
+        if (!lipSyncController) return;
+        const offsetMs = Number(e.audioOffset) / 10000;
+        lipSyncController.events.push({
+          offsetMs,
+          visemeId: e.visemeId,
+        });
+      };
+
       synthesizer.synthesizing = () => {
         if (!audioStarted) {
           audioStarted = true;
           onAudioStarted?.();
+          if (lipSyncController) {
+            lipSyncController.audioStartTime = performance.now();
+          }
         }
       };
 
@@ -75,9 +87,20 @@ export async function speakText(opts: SpeakOptions): Promise<void> {
         (result) => {
           if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
             onAudioEnded?.();
+            // Set audioEndTime based on the result's audioDuration.
+            // audioDuration is in 100-nanosecond units.
+            // We compute end time relative to audioStartTime (when synthesizing fired),
+            // not "now", because synthesis may complete before playback finishes.
+            if (lipSyncController && lipSyncController.audioStartTime !== null) {
+              const durationMs = Number(result.audioDuration) / 10000;
+              lipSyncController.audioEndTime =
+                lipSyncController.audioStartTime + durationMs;
+            }
           } else {
             onError?.(`TTS finished with reason: ${result.reason}`);
           }
+          // NOTE: we do NOT call deactivateLipSyncController here.
+          // useLipSync will detect when elapsed > audioEndTime and decay.
           try {
             synthesizer.close();
           } catch {
@@ -91,6 +114,9 @@ export async function speakText(opts: SpeakOptions): Promise<void> {
         (err) => {
           console.error('[azureTTS] speakTextAsync error:', err);
           onError?.(typeof err === 'string' ? err : 'TTS error');
+          if (lipSyncController) {
+            lipSyncController.active = false;
+          }
           try {
             synthesizer.close();
           } catch {
@@ -106,6 +132,9 @@ export async function speakText(opts: SpeakOptions): Promise<void> {
   } catch (err: any) {
     console.error('[azureTTS] speakText failed:', err);
     onError?.(err?.message ?? 'TTS failed');
+    if (lipSyncController) {
+      lipSyncController.active = false;
+    }
     activeSynthesizer = null;
   }
 }

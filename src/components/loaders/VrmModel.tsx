@@ -7,18 +7,25 @@ import { useArmRelaxation } from '../../hooks/useArmRelaxation';
 import { useBlinkAnimation } from '../../hooks/useBlinkAnimation';
 import { useHeadAnimation } from '../../hooks/useHeadAnimation';
 import { useIdleBodyAnimation } from '../../hooks/useIdleBodyAnimation';
+import { useLipSync } from '../../hooks/useLipSync';
 import { useResetToTPose } from '../../hooks/useResetToTPose';
 import type { ConversationStatus } from '../../types/conversation';
-//import { inspectModel } from '../../utils/modelInspector';
+import type { LipSyncController } from '../../types/viseme';
 import { useAutoFit } from '../../utils/modelNormalizer';
 
 interface VrmModelProps {
   config: ModelConfig;
   faceTextureUrl?: string | null;
   status?: ConversationStatus;
+  lipSyncController?: LipSyncController;
 }
 
-export default function VrmModel({ config, faceTextureUrl, status }: VrmModelProps) {
+export default function VrmModel({
+  config,
+  faceTextureUrl,
+  status,
+  lipSyncController,
+}: VrmModelProps) {
   const gltf = useLoader(GLTFLoader, config.url, (loader) => {
     loader.register((parser) => new VRMLoaderPlugin(parser));
   });
@@ -32,8 +39,9 @@ export default function VrmModel({ config, faceTextureUrl, status }: VrmModelPro
   useResetToTPose(vrm);
   useIdleBodyAnimation(vrm);
   useArmRelaxation(vrm);
-  useHeadAnimation(vrm, status);          // ← pass status
+  useHeadAnimation(vrm, status);
   useBlinkAnimation(vrm);
+  useLipSync(vrm, lipSyncController ?? dummyController);
   useAutoFit(scene, targetHeight, vrm);
 
   useEffect(() => {
@@ -55,3 +63,12 @@ export default function VrmModel({ config, faceTextureUrl, status }: VrmModelPro
     </group>
   );
 }
+
+// Reused dummy controller for instances where lipSyncController isn't provided.
+// Avoids creating a new controller on every render.
+const dummyController: LipSyncController = {
+  events: [],
+  audioStartTime: null,
+  nextEventIndex: 0,
+  active: false,
+};

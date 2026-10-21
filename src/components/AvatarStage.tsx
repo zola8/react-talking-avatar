@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import type { Ref } from 'react';
 import type { ModelConfig } from '../config/models';
 import type { ConversationStatus } from '../types/conversation';
+import type { LipSyncController } from '../types/viseme';
 import UniversalModel from './UniversalModel';
 
 interface AvatarStageProps {
@@ -15,6 +16,7 @@ interface AvatarStageProps {
   controlsRef?: Ref<any>;
   className?: string;
   status?: ConversationStatus;
+  lipSyncController?: LipSyncController;
 }
 
 export default function AvatarStage({
@@ -27,6 +29,7 @@ export default function AvatarStage({
   controlsRef,
   className,
   status,
+  lipSyncController,
 }: AvatarStageProps) {
   const canvasKey = `${config.id}-${refreshCount}`;
 
@@ -44,6 +47,7 @@ export default function AvatarStage({
           config={config}
           faceTextureUrl={faceTextureUrl}
           status={status}
+          lipSyncController={lipSyncController}
         />
         <OrbitControls
           ref={controlsRef}

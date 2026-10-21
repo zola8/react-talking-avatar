@@ -10,6 +10,7 @@ import { useAzureToken } from '../hooks/useAzureToken';
 import { speakText, stopSpeaking } from '../services/azureTTS';
 import { generateMockResponse } from '../services/mockLLM';
 import type { ConversationStatus, Message } from '../types/conversation';
+import { createLipSyncController, deactivateLipSyncController, type LipSyncController } from '../types/viseme';
 
 export default function Avatar() {
   const [selectedModel, setSelectedModel] = useState<ModelConfig>(MODELS[0]);
@@ -20,14 +21,17 @@ export default function Avatar() {
   const controlsRef = useRef<any>(null);
   const turnIdRef = useRef<string | null>(null);
 
-  // Shared Azure auth token — used for both STT (VoiceInput) and TTS (Avatar)
+  // Single lip sync controller, shared between TTS (writes) and VRM hook (reads)
+  const lipSyncControllerRef = useRef<LipSyncController>(createLipSyncController());
+
   const { token, region } = useAzureToken();
 
   const handleRefresh = () => setRefreshCount((c) => c + 1);
 
   const handleClearHistory = () => {
-    turnIdRef.current = null;        // invalidate any in-flight turn
+    turnIdRef.current = null;
     stopSpeaking();
+    deactivateLipSyncController(lipSyncControllerRef.current);
     setStatus('idle');
     setSpeakingMessageId(null);
     setMessages([]);
@@ -36,11 +40,9 @@ export default function Avatar() {
   const handleTextSubmit = async (text: string) => {
     console.log('[Avatar] Received text:', text);
 
-    // Assign a unique ID to this conversation turn so we can cancel it cleanly
     const turnId = crypto.randomUUID();
     turnIdRef.current = turnId;
 
-    // 1. Add user message
     const userMsg: Message = {
       id: crypto.randomUUID(),
       role: 'user',
@@ -51,16 +53,13 @@ export default function Avatar() {
     setStatus('thinking');
 
     try {
-      // 2. Call mock LLM
       const response = await generateMockResponse(text);
 
-      // Check if cancelled during "thinking"
       if (turnIdRef.current !== turnId) {
         console.log('[Avatar] Cancelled during thinking');
         return;
       }
 
-      // 3. Add assistant message
       const aiMsg: Message = {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -69,7 +68,6 @@ export default function Avatar() {
       };
       setMessages((prev) => [...prev, aiMsg]);
 
-      // 4. Speak via Azure TTS
       if (token) {
         setStatus('speaking');
         setSpeakingMessageId(aiMsg.id);
@@ -80,10 +78,10 @@ export default function Avatar() {
           region,
           language: selectedModel.voice.language,
           voiceName: selectedModel.voice.voiceName,
+          lipSyncController: lipSyncControllerRef.current,
           onError: (err) => console.error('[Avatar] TTS error:', err),
         });
 
-        // Check if cancelled during speaking
         if (turnIdRef.current !== turnId) {
           console.log('[Avatar] Cancelled during speaking');
           return;
@@ -94,7 +92,6 @@ export default function Avatar() {
     } catch (err) {
       console.error('[Avatar] Pipeline error:', err);
     } finally {
-      // Only reset state if this turn is still the active one
       if (turnIdRef.current === turnId) {
         setStatus('idle');
         setSpeakingMessageId(null);
@@ -105,8 +102,9 @@ export default function Avatar() {
 
   const handleCancel = () => {
     console.log('[Avatar] Cancelled');
-    turnIdRef.current = null;        // invalidate the current turn
+    turnIdRef.current = null;
     stopSpeaking();
+    deactivateLipSyncController(lipSyncControllerRef.current);
     setStatus('idle');
     setSpeakingMessageId(null);
   };
@@ -115,11 +113,9 @@ export default function Avatar() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-wrap justify-between items-center gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-bold text-gray-800">The Avatar</h1>
-          <div className="mt-2">
-            <StatusPill status={status} />
-          </div>
+          <StatusPill status={status} />
         </div>
 
         <div className="flex items-center gap-3">
@@ -145,7 +141,8 @@ export default function Avatar() {
             config={selectedModel}
             refreshCount={refreshCount}
             controlsRef={controlsRef}
-            status={status} 
+            status={status}
+            lipSyncController={lipSyncControllerRef.current}
           />
         </div>
         <div className="lg:col-span-2 h-[600px]">
