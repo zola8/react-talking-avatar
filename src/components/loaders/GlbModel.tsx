@@ -8,15 +8,13 @@ import { useAutoFit } from '../../utils/modelNormalizer';
 
 interface GlbModelProps {
   config: ModelConfig;
-  faceTextureUrl?: string | null;
   status?: ConversationStatus;
 }
 
-export default function GlbModel({ config, faceTextureUrl, status }: GlbModelProps) {
+export default function GlbModel({ config, status }: GlbModelProps) {
   // status is accepted but unused — GLB models have no humanoid bones to animate.
   // Kept in props for interface consistency with VRM/FBX loaders.
   void status;
-  void faceTextureUrl;
 
   const gltf = useLoader(GLTFLoader, config.url);
   const scene = gltf.scene;

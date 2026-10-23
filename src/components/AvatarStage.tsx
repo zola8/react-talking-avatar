@@ -9,7 +9,6 @@ import UniversalModel from './UniversalModel';
 interface AvatarStageProps {
   config: ModelConfig;
   refreshCount: number;
-  faceTextureUrl?: string | null;
   cameraY?: number;
   cameraZ?: number;
   lookAtY?: number;
@@ -22,7 +21,6 @@ interface AvatarStageProps {
 export default function AvatarStage({
   config,
   refreshCount,
-  faceTextureUrl,
   cameraY = 1.2,
   cameraZ = 3.5,
   lookAtY = 1.2,
@@ -45,7 +43,6 @@ export default function AvatarStage({
         <directionalLight position={[5, 8, 5]} intensity={1.2} />
         <UniversalModel
           config={config}
-          faceTextureUrl={faceTextureUrl}
           status={status}
           lipSyncController={lipSyncController}
         />

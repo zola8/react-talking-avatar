@@ -8,31 +8,24 @@ import VrmModel from './loaders/VrmModel';
 
 interface UniversalModelProps {
   config: ModelConfig;
-  faceTextureUrl?: string | null;
   status?: ConversationStatus;
   lipSyncController?: LipSyncController;
 }
 
 export default function UniversalModel({
   config,
-  faceTextureUrl,
   status,
   lipSyncController,
 }: UniversalModelProps) {
-  if (faceTextureUrl) {
-    console.log(`[UniversalModel] Face texture received: ${faceTextureUrl}`);
-  }
-
   return (
     <Suspense fallback={null}>
       {config.format === 'fbx' ? (
-        <FbxModel config={config} faceTextureUrl={faceTextureUrl} status={status} />
+        <FbxModel config={config} status={status} />
       ) : config.format === 'glb' ? (
-        <GlbModel config={config} faceTextureUrl={faceTextureUrl} status={status} />
+        <GlbModel config={config} status={status} />
       ) : (
         <VrmModel
           config={config}
-          faceTextureUrl={faceTextureUrl}
           status={status}
           lipSyncController={lipSyncController}
         />

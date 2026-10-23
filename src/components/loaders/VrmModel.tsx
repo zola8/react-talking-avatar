@@ -15,14 +15,12 @@ import { useAutoFit } from '../../utils/modelNormalizer';
 
 interface VrmModelProps {
   config: ModelConfig;
-  faceTextureUrl?: string | null;
   status?: ConversationStatus;
   lipSyncController?: LipSyncController;
 }
 
 export default function VrmModel({
   config,
-  faceTextureUrl,
   status,
   lipSyncController,
 }: VrmModelProps) {
@@ -69,6 +67,7 @@ export default function VrmModel({
 const dummyController: LipSyncController = {
   events: [],
   audioStartTime: null,
+  audioEndTime: null,
   nextEventIndex: 0,
   active: false,
 };

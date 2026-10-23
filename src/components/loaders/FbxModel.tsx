@@ -8,16 +8,14 @@ import { useAutoFit } from '../../utils/modelNormalizer';
 
 interface FbxModelProps {
   config: ModelConfig;
-  faceTextureUrl?: string | null;
   status?: ConversationStatus;
 }
 
-export default function FbxModel({ config, faceTextureUrl, status }: FbxModelProps) {
+export default function FbxModel({ config, status }: FbxModelProps) {
   // FBX might have a skeleton, but we don't currently animate it.
   // Kept in props for interface consistency.
   
   void status;
-  void faceTextureUrl;
 
   const scene = useLoader(FBXLoader, config.url);
 
