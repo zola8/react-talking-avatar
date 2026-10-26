@@ -87,8 +87,7 @@ export default function VoiceInput({
     }
   };
 
-  const handleSubmit = (e: React.SubmitEvent) => {
-    e.preventDefault();
+  const doSubmit = () => {
     if (isBusy) return;
     const trimmed = text.trim();
     if (!trimmed) return;
@@ -102,17 +101,23 @@ export default function VoiceInput({
     setText('');
   };
 
-  const handleCancel = (e: React.MouseEvent) => {
+  const handleSubmit = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    onCancel?.();
+    doSubmit();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e);
+      doSubmit();
     }
   };
+
+  const handleCancel = (e: React.MouseEvent) => {
+    e.preventDefault();
+    onCancel?.();
+  };
+
 
   const showClear = (text.length > 0 || (isListening && partialTranscript.length > 0)) && !isBusy;
 
@@ -128,8 +133,8 @@ export default function VoiceInput({
       <form
         onSubmit={handleSubmit}
         className={`flex items-center gap-2 bg-white border rounded-lg shadow-sm px-3 py-2 transition-colors ${isRecording
-            ? 'border-red-300 ring-2 ring-red-200'
-            : 'border-gray-300 focus-within:ring-2 focus-within:ring-stone-500'
+          ? 'border-red-300 ring-2 ring-red-200'
+          : 'border-gray-300 focus-within:ring-2 focus-within:ring-stone-500'
           }`}
       >
         <input
@@ -162,8 +167,8 @@ export default function VoiceInput({
           onClick={handleMicClick}
           disabled={micDisabled}
           className={`p-2 rounded-full transition-colors disabled:opacity-50 ${isRecording
-              ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            ? 'bg-red-500 text-white hover:bg-red-600 animate-pulse'
+            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           title={
             tokenLoading
