@@ -1,27 +1,31 @@
-import { MODELS, type ModelConfig } from '../config/models';
-
+import type { ModelConfig } from '../config/models';
 
 interface ModelSelectorProps {
+  models: ModelConfig[];
   selectedId: string;
-  onChange: (config: ModelConfig) => void;
+  onChange: (model: ModelConfig) => void;
+  disabled?: boolean;
 }
 
-
-export default function ModelSelector({ selectedId, onChange }: ModelSelectorProps) {
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selected = MODELS.find((m) => m.id === e.target.value);
-    if (selected) onChange(selected);
-  };
-
+export default function ModelSelector({
+  models,
+  selectedId,
+  onChange,
+  disabled = false,
+}: ModelSelectorProps) {
   return (
     <select
       value={selectedId}
-      onChange={handleChange}
-      className="px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      onChange={(e) => {
+        const model = models.find((m) => m.id === e.target.value);
+        if (model) onChange(model);
+      }}
+      disabled={disabled}
+      className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-800 disabled:opacity-50"
     >
-      {MODELS.map((model) => (
-        <option key={model.id} value={model.id}>
-          {model.label}
+      {models.map((m) => (
+        <option key={m.id} value={m.id}>
+          {m.label}
         </option>
       ))}
     </select>

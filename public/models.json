@@ -1,0 +1,108 @@
+{
+  "models": [
+    {
+      "id": "Alice_Chan",
+      "label": "Alice_Chan",
+      "url": "https://pub-29c27cdca4784415a9a5a9bb0f34d2ef.r2.dev/Alice_Chan.vrm",
+      "format": "vrm",
+      "rotation": [0.0, 3.141592, 0.0],
+      "yOffset": 1.8,
+      "zoomAdjust": 1.0,
+      "voice": {
+        "language": "en-US",
+        "voiceName": "en-US-AriaNeural"
+      }
+    },
+    {
+      "id": "blue_haired",
+      "label": "Blue Haired (VRM)",
+      "url": "https://pub-29c27cdca4784415a9a5a9bb0f34d2ef.r2.dev/blue_haired.vrm",
+      "format": "vrm",
+      "rotation": [0.0, 3.141592, 0.0],
+      "yOffset": 1.8,
+      "zoomAdjust": 1.0,
+      "voice": {
+        "language": "en-US",
+        "voiceName": "en-US-AriaNeural"
+      }
+    },
+    {
+      "id": "cat_boy",
+      "label": "Cat Boy (VRM)",
+      "url": "https://pub-29c27cdca4784415a9a5a9bb0f34d2ef.r2.dev/Catboy.vrm",
+      "format": "vrm",
+      "rotation": [0.0, 3.141592, 0.0],
+      "yOffset": 1.8,
+      "zoomAdjust": 2.2,
+      "voice": {
+        "language": "en-US",
+        "voiceName": "en-US-DavisNeural"
+      }
+    },
+    {
+      "id": "choco_orange",
+      "label": "Choco Orange",
+      "url": "https://pub-29c27cdca4784415a9a5a9bb0f34d2ef.r2.dev/ChocoOrange.vrm",
+      "format": "vrm",
+      "rotation": [0.0, 3.141592, 0.0],
+      "yOffset": 1.8,
+      "zoomAdjust": 1.0,
+      "voice": {
+        "language": "en-US",
+        "voiceName": "en-US-AriaNeural"
+      }
+    },
+    {
+      "id": "girl3",
+      "label": "Girl 3 (VRM)",
+      "url": "https://pub-29c27cdca4784415a9a5a9bb0f34d2ef.r2.dev/girl3.vrm",
+      "format": "vrm",
+      "rotation": [0.0, 3.141592, 0.0],
+      "yOffset": 1.8,
+      "zoomAdjust": 1.0,
+      "voice": {
+        "language": "en-US",
+        "voiceName": "en-US-AriaNeural"
+      }
+    },
+    {
+      "id": "soft_kitty",
+      "label": "Soft Kitty (VRM)",
+      "url": "https://pub-29c27cdca4784415a9a5a9bb0f34d2ef.r2.dev/Soft_Kitty.vrm",
+      "format": "vrm",
+      "rotation": [0.0, 3.141592, 0.0],
+      "yOffset": 1.8,
+      "zoomAdjust": 1.0,
+      "voice": {
+        "language": "en-US",
+        "voiceName": "en-US-AriaNeural"
+      }
+    },
+    {
+      "id": "tekito",
+      "label": "Tekito (VRM)",
+      "url": "https://pub-29c27cdca4784415a9a5a9bb0f34d2ef.r2.dev/tekito.vrm",
+      "format": "vrm",
+      "rotation": [0.0, 3.141592, 0.0],
+      "yOffset": 1.8,
+      "zoomAdjust": 1.0,
+      "voice": {
+        "language": "en-US",
+        "voiceName": "en-US-AriaNeural"
+      }
+    },
+    {
+      "id": "yozora_neko",
+      "label": "Yozora Neko (VRM)",
+      "url": "https://pub-29c27cdca4784415a9a5a9bb0f34d2ef.r2.dev/yozora_neko.vrm",
+      "format": "vrm",
+      "rotation": [0.0, 3.141592, 0.0],
+      "yOffset": 1.8,
+      "zoomAdjust": 1.0,
+      "voice": {
+        "language": "en-US",
+        "voiceName": "en-US-AriaNeural"
+      }
+    }
+  ]
+}

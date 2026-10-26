@@ -5,26 +5,35 @@ import Icon from '../components/Icon';
 import ModelSelector from '../components/ModelSelector';
 import StatusPill from '../components/StatusPill';
 import VoiceInput from '../components/VoiceInput';
-import { MODELS, type ModelConfig } from '../config/models';
+import type { ModelConfig } from '../config/models';
 import { useAzureToken } from '../hooks/useAzureToken';
+import { useModelConfig } from '../hooks/useModelConfig';
 import { speakText, stopSpeaking } from '../services/azureTTS';
 import { generateMockResponse } from '../services/mockLLM';
 import type { ConversationStatus, Message } from '../types/conversation';
-import { createLipSyncController, deactivateLipSyncController, type LipSyncController } from '../types/viseme';
+import {
+  createLipSyncController,
+  deactivateLipSyncController,
+  type LipSyncController,
+} from '../types/viseme';
 
 export default function Avatar() {
-  const [selectedModel, setSelectedModel] = useState<ModelConfig>(MODELS[0]);
+  const { models, isLoading: modelsLoading, error: modelsError } = useModelConfig();
+  const [selectedModel, setSelectedModel] = useState<ModelConfig | null>(null);
   const [refreshCount, setRefreshCount] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<ConversationStatus>('idle');
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const controlsRef = useRef<any>(null);
   const turnIdRef = useRef<string | null>(null);
-
-  // Single lip sync controller, shared between TTS (writes) and VRM hook (reads)
   const lipSyncControllerRef = useRef<LipSyncController>(createLipSyncController());
 
   const { token, region } = useAzureToken();
+
+  // Auto-select first model once config loads
+  if (models.length > 0 && selectedModel === null) {
+    setSelectedModel(models[0]);
+  }
 
   const handleRefresh = () => setRefreshCount((c) => c + 1);
 
@@ -38,6 +47,7 @@ export default function Avatar() {
   };
 
   const handleTextSubmit = async (text: string) => {
+    if (!selectedModel) return;
     console.log('[Avatar] Received text:', text);
 
     const turnId = crypto.randomUUID();
@@ -86,8 +96,6 @@ export default function Avatar() {
           console.log('[Avatar] Cancelled during speaking');
           return;
         }
-      } else {
-        console.warn('[Avatar] No token available, skipping TTS');
       }
     } catch (err) {
       console.error('[Avatar] Pipeline error:', err);
@@ -109,6 +117,28 @@ export default function Avatar() {
     setSpeakingMessageId(null);
   };
 
+  // Loading state
+  if (modelsLoading) {
+    return (
+      <div className="flex items-center justify-center h-[600px] text-gray-500">
+        Loading avatar models...
+      </div>
+    );
+  }
+
+  // Error state
+  if (modelsError || models.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[600px] text-red-500 gap-2">
+        <p>Failed to load avatar models.</p>
+        <p className="text-xs text-gray-500">{modelsError}</p>
+      </div>
+    );
+  }
+
+  // Safety — selectedModel should be set by the auto-select above
+  if (!selectedModel) return null;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -120,6 +150,7 @@ export default function Avatar() {
 
         <div className="flex items-center gap-3">
           <ModelSelector
+            models={models}
             selectedId={selectedModel.id}
             onChange={setSelectedModel}
           />
