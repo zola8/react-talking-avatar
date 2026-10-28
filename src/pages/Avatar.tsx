@@ -9,8 +9,8 @@ import type { ModelConfig } from '../config/models';
 import { useAzureToken } from '../hooks/useAzureToken';
 import { useModelConfig } from '../hooks/useModelConfig';
 import { speakText, stopSpeaking } from '../services/azureTTS';
-import { generateMockResponse } from '../services/mockLLM';
-import type { ConversationStatus, Message } from '../types/conversation';
+import { generateResponse, type ChatMessage } from '../services/llm';
+import type { ConversationStatus, UIMessage } from '../types/conversation';
 import {
   createLipSyncController,
   deactivateLipSyncController,
@@ -21,7 +21,7 @@ export default function Avatar() {
   const { models, isLoading: modelsLoading, error: modelsError } = useModelConfig();
   const [selectedModel, setSelectedModel] = useState<ModelConfig | null>(null);
   const [refreshCount, setRefreshCount] = useState(0);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<UIMessage[]>([]);
   const [status, setStatus] = useState<ConversationStatus>('idle');
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const controlsRef = useRef<any>(null);
@@ -53,7 +53,8 @@ export default function Avatar() {
     const turnId = crypto.randomUUID();
     turnIdRef.current = turnId;
 
-    const userMsg: Message = {
+    // 1. Add user message to UI immediately
+    const userMsg: UIMessage = {
       id: crypto.randomUUID(),
       role: 'user',
       text,
@@ -63,14 +64,25 @@ export default function Avatar() {
     setStatus('thinking');
 
     try {
-      const response = await generateMockResponse(text);
+      // 2. Build conversation history for the backend
+      //    (previous turns + the new user message)
+      const history: ChatMessage[] = messages.map(m => ({
+        role: m.role,
+        content: m.text,
+      }));
+      history.push({ role: 'user', content: text });
 
+      // 3. Call the backend
+      const response = await generateResponse(history);
+
+      // Check if cancelled during "thinking"
       if (turnIdRef.current !== turnId) {
         console.log('[Avatar] Cancelled during thinking');
         return;
       }
 
-      const aiMsg: Message = {
+      // 4. Add assistant message to UI
+      const aiMsg: UIMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
         text: response.text,
@@ -78,6 +90,7 @@ export default function Avatar() {
       };
       setMessages((prev) => [...prev, aiMsg]);
 
+      // 5. Speak via Azure TTS (if we have a token)
       if (token) {
         setStatus('speaking');
         setSpeakingMessageId(aiMsg.id);
@@ -99,6 +112,13 @@ export default function Avatar() {
       }
     } catch (err) {
       console.error('[Avatar] Pipeline error:', err);
+      const errMsg: UIMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        text: 'Sorry, something went wrong. Please try again.',
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, errMsg]);
     } finally {
       if (turnIdRef.current === turnId) {
         setStatus('idle');

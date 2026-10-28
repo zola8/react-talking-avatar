@@ -10,6 +10,7 @@ interface TokenState {
 const DEFAULT_REGION = 'westeurope';
 const TOKEN_LIFETIME_MS = 10 * 60 * 1000;       // Azure tokens are valid for 10 min
 const TOKEN_REFRESH_BUFFER_MS = 60_000;         // refresh 1 min before expiry
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8080';
 
 export function useAzureToken() {
   const [state, setState] = useState<TokenState>({
@@ -26,7 +27,7 @@ export function useAzureToken() {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const resp = await fetch('/api/azure-token', { method: 'POST' });
+      const resp = await fetch(`${BACKEND_URL}/azure/token`, { method: 'POST' });
       if (!resp.ok) {
         throw new Error(`Token request failed: ${resp.status} ${resp.statusText}`);
       }

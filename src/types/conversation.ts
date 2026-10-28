@@ -6,7 +6,7 @@ export type ConversationStatus =
   | 'speaking'         // TTS playing, avatar lip-syncing
   | 'error';
 
-export interface Message {
+export interface UIMessage {
   id: string;
   role: 'user' | 'assistant';
   text: string;

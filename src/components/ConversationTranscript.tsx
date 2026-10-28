@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import type { ConversationStatus, Message } from '../types/conversation';
+import type { ConversationStatus, UIMessage } from '../types/conversation';
 import Icon from './Icon';
 
 interface ConversationTranscriptProps {
-  messages: Message[];
+  messages: UIMessage[];
   status: ConversationStatus;
   onClearHistory?: () => void;
   speakingMessageId?: string | null;

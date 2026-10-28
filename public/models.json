@@ -1,9 +1,9 @@
 {
   "models": [
     {
-      "id": "Alice_Chan",
-      "label": "Alice_Chan",
-      "url": "https://pub-29c27cdca4784415a9a5a9bb0f34d2ef.r2.dev/Alice_Chan.vrm",
+      "id": "blue_haired",
+      "label": "Blue Haired (VRM)",
+      "url": "https://pub-29c27cdca4784415a9a5a9bb0f34d2ef.r2.dev/blue_haired.vrm",
       "format": "vrm",
       "rotation": [0.0, 3.141592, 0.0],
       "yOffset": 1.8,
@@ -14,9 +14,9 @@
       }
     },
     {
-      "id": "blue_haired",
-      "label": "Blue Haired (VRM)",
-      "url": "https://pub-29c27cdca4784415a9a5a9bb0f34d2ef.r2.dev/blue_haired.vrm",
+      "id": "Alice_Chan",
+      "label": "Alice_Chan",
+      "url": "https://pub-29c27cdca4784415a9a5a9bb0f34d2ef.r2.dev/Alice_Chan.vrm",
       "format": "vrm",
       "rotation": [0.0, 3.141592, 0.0],
       "yOffset": 1.8,

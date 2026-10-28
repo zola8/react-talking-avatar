@@ -26,7 +26,7 @@ export function useLipSync(
       }
     }
     availablePresetsRef.current = available;
-    console.log('[useLipSync] Available mouth presets:', Array.from(available));
+    // console.log('[useLipSync] Available mouth presets:', Array.from(available));
   }, [vrm]);
 
   useFrame((_, delta) => {
