@@ -6,6 +6,7 @@ import FbxModel from './loaders/FbxModel';
 import GlbModel from './loaders/GlbModel';
 import VrmModel from './loaders/VrmModel';
 
+
 interface UniversalModelProps {
   config: ModelConfig;
   status?: ConversationStatus;

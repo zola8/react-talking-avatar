@@ -1,10 +1,11 @@
-import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
-import type { Ref } from 'react';
+import { CAMERA_DEFAULTS } from '../config/constants';
 import type { ConversationStatus } from '../types/conversation';
 import type { ModelConfig } from '../types/models';
+import type { OrbitControlsRef } from '../types/three';
 import type { LipSyncController } from '../types/viseme';
-import UniversalModel from './UniversalModel';
+import AvatarScene from './AvatarScene';
+
 
 interface AvatarStageProps {
   config: ModelConfig;
@@ -12,7 +13,7 @@ interface AvatarStageProps {
   cameraY?: number;
   cameraZ?: number;
   lookAtY?: number;
-  controlsRef?: Ref<any>;
+  controlsRef?: React.Ref<OrbitControlsRef>;
   className?: string;
   status?: ConversationStatus;
   lipSyncController?: LipSyncController;
@@ -21,15 +22,20 @@ interface AvatarStageProps {
 export default function AvatarStage({
   config,
   refreshCount,
-  cameraY = 1.2,
-  cameraZ = 3.5,
-  lookAtY = 1.2,
+  cameraY,
+  cameraZ,
+  lookAtY,
   controlsRef,
   className,
   status,
   lipSyncController,
 }: AvatarStageProps) {
   const canvasKey = `${config.id}-${refreshCount}`;
+  const cameraPosition: [number, number, number] = [
+    0,
+    cameraY ?? CAMERA_DEFAULTS.y,
+    cameraZ ?? CAMERA_DEFAULTS.z,
+  ];
 
   return (
     <div
@@ -37,24 +43,14 @@ export default function AvatarStage({
     >
       <Canvas
         key={canvasKey}
-        camera={{ position: [0, cameraY, cameraZ], fov: 35 }}
+        camera={{ position: cameraPosition, fov: CAMERA_DEFAULTS.fov }}
       >
-        <ambientLight intensity={0.7} />
-        <directionalLight position={[5, 8, 5]} intensity={1.2} />
-        <UniversalModel
+        <AvatarScene
           config={config}
+          lookAtY={lookAtY}
+          controlsRef={controlsRef}
           status={status}
           lipSyncController={lipSyncController}
-        />
-        <OrbitControls
-          ref={controlsRef}
-          target={[0, lookAtY, 0]}
-          enablePan={true}
-          panSpeed={0.5}
-          minDistance={1.5}
-          maxDistance={8}
-          minPolarAngle={0.2}
-          maxPolarAngle={Math.PI / 2 + 0.1}
         />
       </Canvas>
     </div>
