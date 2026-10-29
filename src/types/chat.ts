@@ -1,0 +1,44 @@
+import type { ModelConfig } from './models';
+
+export type ChatRole = 'user' | 'assistant' | 'system';
+
+export interface ChatMessage {
+  role: ChatRole;
+  content: string;
+}
+
+export type ChatModelContext = Pick<ModelConfig, 'id' | 'format' | 'voice'>;
+
+export interface ChatRequest {
+  sessionId: string;
+  messages: ChatMessage[];
+  model: ChatModelContext;
+  timestamp: number;
+}
+
+export interface ChatResponse {
+  messageId: string;
+  text: string;
+}
+
+export type ChatErrorCode =
+  | 'network'
+  | 'timeout'
+  | 'bad_request'
+  | 'unauthorized'
+  | 'rate_limited'
+  | 'server_error'
+  | 'parse'
+  | 'unknown';
+
+export class ChatError extends Error {
+  readonly code: ChatErrorCode;
+  readonly status?: number;
+
+  constructor(message: string, code: ChatErrorCode, status?: number) {
+    super(message);
+    this.name = 'ChatError';
+    this.code = code;
+    this.status = status;
+  }
+}

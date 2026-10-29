@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { speakText, stopSpeaking } from '../services/azureTTS';
-import { generateResponse, type ChatMessage } from '../services/llm';
+import { generateResponse } from '../services/llm';
+import { ChatError, type ChatMessage, type ChatRequest } from '../types/chat';
 import type { ConversationStatus, UIMessage } from '../types/conversation';
 import type { ModelConfig } from '../types/models';
 import {
@@ -16,7 +17,6 @@ interface UseConversationParams {
   region: string;
 }
 
-
 export interface UseConversationResult {
   messages: UIMessage[];
   status: ConversationStatus;
@@ -27,8 +27,6 @@ export interface UseConversationResult {
   handleClearHistory: () => void;
 }
 
-const ERROR_MESSAGE = 'Sorry, something went wrong. Please try again.';
-
 function makeMessage(role: 'user' | 'assistant', text: string): UIMessage {
   return {
     id: crypto.randomUUID(),
@@ -36,6 +34,30 @@ function makeMessage(role: 'user' | 'assistant', text: string): UIMessage {
     text,
     timestamp: Date.now(),
   };
+}
+
+function formatChatError(err: unknown): string {
+  if (err instanceof ChatError) {
+    switch (err.code) {
+      case 'timeout':
+        return 'The response took too long. Please try again.';
+      case 'network':
+        return 'Network error. Please check your connection.';
+      case 'rate_limited':
+        return 'Too many requests. Please wait a moment and try again.';
+      case 'unauthorized':
+        return 'Authentication failed. Please reload the page.';
+      case 'server_error':
+        return 'The server had an error. Please try again shortly.';
+      case 'bad_request':
+        return 'The request was invalid. Please try rephrasing.';
+      case 'parse':
+        return 'Received an invalid response. Please try again.';
+      default:
+        return err.message || 'Something went wrong. Please try again.';
+    }
+  }
+  return 'Something went wrong. Please try again.';
 }
 
 export function useConversation({
@@ -47,6 +69,7 @@ export function useConversation({
   const [status, setStatus] = useState<ConversationStatus>('idle');
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const turnIdRef = useRef<string | null>(null);
+  const sessionIdRef = useRef<string>(crypto.randomUUID());
   const lipSyncControllerRef = useRef<LipSyncController>(createLipSyncController());
 
   const resetPipelineState = useCallback(() => {
@@ -75,7 +98,18 @@ export function useConversation({
       }));
       history.push({ role: 'user', content: text });
 
-      const response = await generateResponse(history);
+      const request: ChatRequest = {
+        sessionId: sessionIdRef.current,
+        messages: history,
+        model: {
+          id: selectedModel.id,
+          format: selectedModel.format,
+          voice: selectedModel.voice,
+        },
+        timestamp: Date.now(),
+      };
+
+      const response = await generateResponse(request);
 
       if (turnIdRef.current !== turnId) {
         console.log('[Avatar] Cancelled during thinking');
@@ -106,7 +140,8 @@ export function useConversation({
       }
     } catch (err) {
       console.error('[Avatar] Pipeline error:', err);
-      setMessages((prev) => [...prev, makeMessage('assistant', ERROR_MESSAGE)]);
+      const errorText = formatChatError(err);
+      setMessages((prev) => [...prev, makeMessage('assistant', errorText)]);
     } finally {
       if (turnIdRef.current === turnId) {
         setStatus('idle');
@@ -119,6 +154,7 @@ export function useConversation({
   const handleClearHistory = useCallback(() => {
     resetPipelineState();
     setMessages([]);
+    sessionIdRef.current = crypto.randomUUID();
   }, [resetPipelineState]);
 
   return {
