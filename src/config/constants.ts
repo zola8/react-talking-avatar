@@ -8,6 +8,9 @@ export const CHAT_TIMEOUT_MS = 30_000;
 
 export const DUMMY_USER_ID = 'demo-user-1';
 
+export const AZURE_TOKEN_PATH = '/azure/token';
+export const AZURE_TOKEN_TIMEOUT_MS = 10_000;
+
 export const DEFAULT_ROTATION: [number, number, number] = [0, 0, 0];
 export const DEFAULT_Y_OFFSET = 0;
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAzureSpeechRecognition } from '../hooks/useAzureSpeechRecognition';
 import type { ConversationStatus } from '../types/conversation';
 import Icon from './Icon';
@@ -10,6 +10,7 @@ interface VoiceInputProps {
   disabled?: boolean;
   token: string | null;
   region: string;
+  language: string;
 }
 
 export default function VoiceInput({
@@ -19,6 +20,7 @@ export default function VoiceInput({
   disabled = false,
   token,
   region,
+  language,
 }: VoiceInputProps) {
   const [text, setText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -30,9 +32,13 @@ export default function VoiceInput({
     partialTranscript,
     finalTranscript,
     error: recognitionError,
-  } = useAzureSpeechRecognition({ token, region, enabled: !!token });
+  } = useAzureSpeechRecognition({ token, region, language, enabled: !!token });
 
-  // Sync text field from Azure transcripts
+  const stopRecording = useCallback(() => {
+    stopListening();
+    setIsRecording(false);
+  }, [stopListening]);
+
   useEffect(() => {
     if (isListening && partialTranscript) {
       setText(partialTranscript);
@@ -41,15 +47,12 @@ export default function VoiceInput({
     }
   }, [isListening, partialTranscript, finalTranscript]);
 
-  // Stop listening if user transitions to a busy state
   useEffect(() => {
     if (isRecording && (status === 'thinking' || status === 'speaking')) {
-      stopListening();
-      setIsRecording(false);
+      stopRecording();
     }
-  }, [status, isRecording, stopListening]);
+  }, [status, isRecording, stopRecording]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       stopListening();

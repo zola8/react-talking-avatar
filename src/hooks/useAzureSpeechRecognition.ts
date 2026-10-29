@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 interface UseAzureSpeechRecognitionArgs {
   token: string | null;
   region: string;
+  language: string;
   enabled?: boolean;
 }
 
@@ -19,6 +20,7 @@ interface UseAzureSpeechRecognitionReturn {
 export function useAzureSpeechRecognition({
   token,
   region,
+  language,
   enabled = true,
 }: UseAzureSpeechRecognitionArgs): UseAzureSpeechRecognitionReturn {
   const [isListening, setIsListening] = useState(false);
@@ -41,10 +43,8 @@ export function useAzureSpeechRecognition({
     setIsListening(false);
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => () => cleanupRecognizer(), [cleanupRecognizer]);
 
-  // If token is revoked mid-session, stop listening
   useEffect(() => {
     if (!token && recognizerRef.current) {
       cleanupRecognizer();
@@ -68,10 +68,8 @@ export function useAzureSpeechRecognition({
 
     try {
       const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(token, region);
-      speechConfig.speechRecognitionLanguage = 'en-US';
+      speechConfig.speechRecognitionLanguage = language;
 
-      // Use the default microphone input directly — Azure SDK handles permission
-      // and audio format conversion internally.
       const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
       const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
       recognizerRef.current = recognizer;
@@ -117,18 +115,19 @@ export function useAzureSpeechRecognition({
             setError(typeof err === 'string' ? err : 'Start failed');
             cleanupRecognizer();
             reject(err);
-          }
+          },
         );
       });
 
       return true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[useAzureSpeechRecognition] startListening failed:', err);
-      setError(err?.message ?? 'Failed to start listening');
+      const message = err instanceof Error ? err.message : 'Failed to start listening';
+      setError(message);
       cleanupRecognizer();
       return false;
     }
-  }, [token, region, enabled, cleanupRecognizer]);
+  }, [token, region, language, enabled, cleanupRecognizer]);
 
   const stopListening = useCallback(async () => {
     const recognizer = recognizerRef.current;

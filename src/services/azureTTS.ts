@@ -4,7 +4,6 @@ import {
   resetLipSyncController,
 } from '../types/viseme';
 
-
 export interface SpeakOptions {
   text: string;
   token: string;
@@ -19,14 +18,20 @@ export interface SpeakOptions {
 
 let activeSynthesizer: SpeechSDK.SpeechSynthesizer | null = null;
 
+function closeSynthesizer(synth: SpeechSDK.SpeechSynthesizer): void {
+  try {
+    synth.close();
+  } catch {
+    // ignore
+  }
+  if (activeSynthesizer === synth) {
+    activeSynthesizer = null;
+  }
+}
+
 export function stopSpeaking(): void {
   if (activeSynthesizer) {
-    try {
-      activeSynthesizer.close();
-    } catch {
-      // ignore
-    }
-    activeSynthesizer = null;
+    closeSynthesizer(activeSynthesizer);
   }
 }
 
@@ -87,28 +92,26 @@ export async function speakText(opts: SpeakOptions): Promise<void> {
         (result) => {
           if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
             onAudioEnded?.();
-            // Set audioEndTime based on the result's audioDuration.
-            // audioDuration is in 100-nanosecond units.
-            // We compute end time relative to audioStartTime (when synthesizing fired),
-            // not "now", because synthesis may complete before playback finishes.
             if (lipSyncController && lipSyncController.audioStartTime !== null) {
               const durationMs = Number(result.audioDuration) / 10000;
               lipSyncController.audioEndTime =
                 lipSyncController.audioStartTime + durationMs;
             }
           } else {
-            onError?.(`TTS finished with reason: ${result.reason}`);
+            const detail =
+              result.reason === SpeechSDK.ResultReason.Canceled
+                ? result.errorDetails
+                : undefined;
+            console.error('[azureTTS] synthesis failed:', {
+              reason: result.reason,
+              errorDetails: detail,
+            });
+            onError?.(detail ?? `TTS finished with reason: ${result.reason}`);
+            if (lipSyncController) {
+              lipSyncController.active = false;
+            }
           }
-          // NOTE: we do NOT call deactivateLipSyncController here.
-          // useLipSync will detect when elapsed > audioEndTime and decay.
-          try {
-            synthesizer.close();
-          } catch {
-            // ignore
-          }
-          if (activeSynthesizer === synthesizer) {
-            activeSynthesizer = null;
-          }
+          closeSynthesizer(synthesizer);
           resolve();
         },
         (err) => {
@@ -117,24 +120,20 @@ export async function speakText(opts: SpeakOptions): Promise<void> {
           if (lipSyncController) {
             lipSyncController.active = false;
           }
-          try {
-            synthesizer.close();
-          } catch {
-            // ignore
-          }
-          if (activeSynthesizer === synthesizer) {
-            activeSynthesizer = null;
-          }
+          closeSynthesizer(synthesizer);
           resolve();
-        }
+        },
       );
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[azureTTS] speakText failed:', err);
-    onError?.(err?.message ?? 'TTS failed');
+    const message = err instanceof Error ? err.message : 'TTS failed';
+    onError?.(message);
     if (lipSyncController) {
       lipSyncController.active = false;
     }
-    activeSynthesizer = null;
+    if (activeSynthesizer) {
+      closeSynthesizer(activeSynthesizer);
+    }
   }
 }

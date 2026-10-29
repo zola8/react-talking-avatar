@@ -90,6 +90,7 @@ export default function Avatar() {
         status={status}
         token={token}
         region={region}
+        language={selectedModel.voice.language}
       />
     </div>
   );

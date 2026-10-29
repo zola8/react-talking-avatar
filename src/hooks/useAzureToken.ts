@@ -1,4 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  AZURE_TOKEN_PATH,
+  AZURE_TOKEN_TIMEOUT_MS,
+  BACKEND_URL,
+} from '../config/constants';
 
 interface TokenState {
   token: string | null;
@@ -7,16 +12,46 @@ interface TokenState {
   error: string | null;
 }
 
-const DEFAULT_REGION = 'westeurope';
-const TOKEN_LIFETIME_MS = 10 * 60 * 1000;       // Azure tokens are valid for 10 min
-const TOKEN_REFRESH_BUFFER_MS = 60_000;         // refresh 1 min before expiry
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8080';
+interface TokenResponse {
+  token: string;
+  region: string;
+}
+
+async function readErrorDetail(resp: Response): Promise<string> {
+  try {
+    const text = await resp.text();
+    if (!text) return `Token request failed: ${resp.status}`;
+    try {
+      const data = JSON.parse(text);
+      if (data && typeof data.detail === 'string') return data.detail;
+    } catch {
+      // body wasn't JSON — return raw text below
+    }
+    return text.trim();
+  } catch {
+    return `Token request failed: ${resp.status}`;
+  }
+}
+
+function parseTokenResponse(data: unknown): TokenResponse {
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid token response: expected an object');
+  }
+  const obj = data as Record<string, unknown>;
+  if (typeof obj.token !== 'string' || !obj.token) {
+    throw new Error('Invalid token response: missing "token"');
+  }
+  if (typeof obj.region !== 'string' || !obj.region) {
+    throw new Error('Invalid token response: missing "region"');
+  }
+  return { token: obj.token, region: obj.region };
+}
 
 export function useAzureToken() {
   const [state, setState] = useState<TokenState>({
     token: null,
-    region: DEFAULT_REGION,
-    isLoading: false,
+    region: '',
+    isLoading: true,
     error: null,
   });
   const fetchingRef = useRef(false);
@@ -26,44 +61,52 @@ export function useAzureToken() {
     fetchingRef.current = true;
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), AZURE_TOKEN_TIMEOUT_MS);
+
     try {
-      const resp = await fetch(`${BACKEND_URL}/azure/token`, { method: 'POST' });
+      const resp = await fetch(`${BACKEND_URL}${AZURE_TOKEN_PATH}`, {
+        method: 'POST',
+        signal: controller.signal,
+      });
       if (!resp.ok) {
-        throw new Error(`Token request failed: ${resp.status} ${resp.statusText}`);
+        const detail = await readErrorDetail(resp);
+        throw new Error(detail);
       }
-      const token = (await resp.text()).trim();
-      if (!token) throw new Error('Empty token received');
+
+      let data: unknown;
+      try {
+        data = await resp.json();
+      } catch {
+        throw new Error('Failed to parse token response JSON');
+      }
+
+      const { token, region } = parseTokenResponse(data);
 
       setState({
         token,
-        region: DEFAULT_REGION,
+        region,
         isLoading: false,
         error: null,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[useAzureToken] fetch failed:', err);
-      setState((prev) => ({
-        ...prev,
-        isLoading: false,
-        error: err?.message ?? 'Token fetch failed',
-      }));
+      const message =
+        err instanceof Error
+          ? (err.name === 'AbortError'
+            ? 'Token request timed out'
+            : err.message)
+          : 'Token fetch failed';
+      setState((prev) => ({ ...prev, isLoading: false, error: message }));
     } finally {
+      clearTimeout(timeoutId);
       fetchingRef.current = false;
     }
   }, []);
 
-  // Initial fetch
   useEffect(() => {
     fetchToken();
   }, [fetchToken]);
-
-  // Refresh 1 min before expiry (re-fetch every 9 minutes as a simple strategy)
-  useEffect(() => {
-    if (!state.token) return;
-    const refreshMs = TOKEN_LIFETIME_MS - TOKEN_REFRESH_BUFFER_MS;
-    const timer = setTimeout(() => fetchToken(), refreshMs);
-    return () => clearTimeout(timer);
-  }, [state.token, fetchToken]);
 
   return state;
 }
