@@ -1,10 +1,10 @@
 import { useLoader } from '@react-three/fiber';
 import { useEffect } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import type { ModelConfig } from '../../config/models';
 import type { ConversationStatus } from '../../types/conversation';
 import { disposeObject } from '../../utils/modelDisposer';
 import { useAutoFit } from '../../utils/modelNormalizer';
+import type { ModelConfig } from '../../types/models';
 
 interface GlbModelProps {
   config: ModelConfig;

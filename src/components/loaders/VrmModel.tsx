@@ -2,7 +2,6 @@ import { VRMLoaderPlugin, VRMUtils, type VRM } from '@pixiv/three-vrm';
 import { useFrame, useLoader } from '@react-three/fiber';
 import { useEffect } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import type { ModelConfig } from '../../config/models';
 import { useArmRelaxation } from '../../hooks/useArmRelaxation';
 import { useBlinkAnimation } from '../../hooks/useBlinkAnimation';
 import { useHeadAnimation } from '../../hooks/useHeadAnimation';
@@ -10,6 +9,7 @@ import { useIdleBodyAnimation } from '../../hooks/useIdleBodyAnimation';
 import { useLipSync } from '../../hooks/useLipSync';
 import { useResetToTPose } from '../../hooks/useResetToTPose';
 import type { ConversationStatus } from '../../types/conversation';
+import type { ModelConfig } from '../../types/models';
 import type { LipSyncController } from '../../types/viseme';
 import { useAutoFit } from '../../utils/modelNormalizer';
 

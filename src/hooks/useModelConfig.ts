@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
-import {
-  type ModelConfig,
-  MODELS_CONFIG_URL,
-  validateModelConfig,
-} from '../config/models';
+import { MODELS_CONFIG_URL } from '../config/constants';
+import { validateModelConfig } from '../config/models';
+import type { ModelConfig } from '../types/models';
 
 interface UseModelConfigState {
   models: ModelConfig[];

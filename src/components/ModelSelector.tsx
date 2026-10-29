@@ -1,4 +1,4 @@
-import type { ModelConfig } from '../config/models';
+import type { ModelConfig } from "../types/models";
 
 interface ModelSelectorProps {
   models: ModelConfig[];

@@ -1,8 +1,8 @@
 import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
 import type { Ref } from 'react';
-import type { ModelConfig } from '../config/models';
 import type { ConversationStatus } from '../types/conversation';
+import type { ModelConfig } from '../types/models';
 import type { LipSyncController } from '../types/viseme';
 import UniversalModel from './UniversalModel';
 

@@ -5,7 +5,6 @@ import Icon from '../components/Icon';
 import ModelSelector from '../components/ModelSelector';
 import StatusPill from '../components/StatusPill';
 import VoiceInput from '../components/VoiceInput';
-import type { ModelConfig } from '../config/models';
 import { useAzureToken } from '../hooks/useAzureToken';
 import { useModelConfig } from '../hooks/useModelConfig';
 import { speakText, stopSpeaking } from '../services/azureTTS';
@@ -16,6 +15,7 @@ import {
   deactivateLipSyncController,
   type LipSyncController,
 } from '../types/viseme';
+import type { ModelConfig } from '../types/models';
 
 export default function Avatar() {
   const { models, isLoading: modelsLoading, error: modelsError } = useModelConfig();

@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
-import type { ModelConfig } from '../config/models';
 import type { ConversationStatus } from '../types/conversation';
+import type { ModelConfig } from '../types/models';
 import type { LipSyncController } from '../types/viseme';
 import FbxModel from './loaders/FbxModel';
 import GlbModel from './loaders/GlbModel';
