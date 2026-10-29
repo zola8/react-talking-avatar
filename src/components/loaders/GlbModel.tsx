@@ -1,10 +1,12 @@
 import { useLoader } from '@react-three/fiber';
 import { useEffect } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DEFAULT_ROTATION, DEFAULT_Y_OFFSET } from '../../config/constants';
 import type { ConversationStatus } from '../../types/conversation';
+import type { ModelConfig } from '../../types/models';
 import { disposeObject } from '../../utils/modelDisposer';
 import { useAutoFit } from '../../utils/modelNormalizer';
-import type { ModelConfig } from '../../types/models';
+
 
 interface GlbModelProps {
   config: ModelConfig;
@@ -28,8 +30,8 @@ export default function GlbModel({ config, status }: GlbModelProps) {
     return () => disposeObject(scene);
   }, [scene]);
 
-  const rotation = config.rotation ?? [0, 0, 0];
-  const yOffset = config.yOffset ?? 0;
+  const rotation = config.rotation ?? DEFAULT_ROTATION;
+  const yOffset = config.yOffset ?? DEFAULT_Y_OFFSET;
 
   return (
     <group rotation={rotation} position={[0, yOffset, 0]}>

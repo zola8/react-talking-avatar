@@ -2,6 +2,7 @@ import { VRMLoaderPlugin, VRMUtils, type VRM } from '@pixiv/three-vrm';
 import { useFrame, useLoader } from '@react-three/fiber';
 import { useEffect } from 'react';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { DEFAULT_MODEL_HEIGHT, DEFAULT_ROTATION, DEFAULT_Y_OFFSET, MIN_MODEL_HEIGHT } from '../../config/constants';
 import { useArmRelaxation } from '../../hooks/useArmRelaxation';
 import { useBlinkAnimation } from '../../hooks/useBlinkAnimation';
 import { useHeadAnimation } from '../../hooks/useHeadAnimation';
@@ -12,6 +13,21 @@ import type { ConversationStatus } from '../../types/conversation';
 import type { ModelConfig } from '../../types/models';
 import type { LipSyncController } from '../../types/viseme';
 import { useAutoFit } from '../../utils/modelNormalizer';
+
+
+function computeTargetHeight(zoomAdjust: number | undefined): number {
+  const adjust = zoomAdjust ?? 0;
+  return Math.max(MIN_MODEL_HEIGHT, DEFAULT_MODEL_HEIGHT * (1 + adjust));
+}
+
+
+const dummyController: LipSyncController = {
+  events: [],
+  audioStartTime: null,
+  audioEndTime: null,
+  nextEventIndex: 0,
+  active: false,
+};
 
 interface VrmModelProps {
   config: ModelConfig;
@@ -31,8 +47,7 @@ export default function VrmModel({
   const vrm = gltf.userData.vrm as VRM | undefined;
   const scene = vrm?.scene ?? gltf.scene;
 
-  const zoomAdjust = config.zoomAdjust ?? 0;
-  const targetHeight = Math.max(0.2, 1.6 * (1 + zoomAdjust));
+  const targetHeight = computeTargetHeight(config.zoomAdjust);
 
   useResetToTPose(vrm);
   useIdleBodyAnimation(vrm);
@@ -45,15 +60,15 @@ export default function VrmModel({
   useEffect(() => {
     // inspectModel(scene, vrm ? 'VRM' : 'GLTF (no VRM block found)', config.label);
     return () => (vrm ? VRMUtils.deepDispose(vrm.scene) : undefined);
-  }, [scene, vrm, config.label]);
+  }, [scene, vrm]);
 
   useFrame((_, delta) => {
     const clampedDelta = Math.min(delta, 0.1);
     vrm?.update(clampedDelta);
   });
 
-  const rotation = config.rotation ?? [0, 0, 0];
-  const yOffset = config.yOffset ?? 0;
+  const rotation = config.rotation ?? DEFAULT_ROTATION;
+  const yOffset = config.yOffset ?? DEFAULT_Y_OFFSET;
 
   return (
     <group rotation={rotation} position={[0, yOffset, 0]}>
@@ -61,13 +76,3 @@ export default function VrmModel({
     </group>
   );
 }
-
-// Reused dummy controller for instances where lipSyncController isn't provided.
-// Avoids creating a new controller on every render.
-const dummyController: LipSyncController = {
-  events: [],
-  audioStartTime: null,
-  audioEndTime: null,
-  nextEventIndex: 0,
-  active: false,
-};
