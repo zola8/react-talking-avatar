@@ -1,143 +1,40 @@
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import AvatarHeader from '../components/AvatarHeader';
 import AvatarStage from '../components/AvatarStage';
 import ConversationTranscript from '../components/ConversationTranscript';
-import Icon from '../components/Icon';
-import ModelSelector from '../components/ModelSelector';
-import StatusPill from '../components/StatusPill';
 import VoiceInput from '../components/VoiceInput';
 import { useAzureToken } from '../hooks/useAzureToken';
+import { useConversation } from '../hooks/useConversation';
 import { useModelConfig } from '../hooks/useModelConfig';
-import { speakText, stopSpeaking } from '../services/azureTTS';
-import { generateResponse, type ChatMessage } from '../services/llm';
-import type { ConversationStatus, UIMessage } from '../types/conversation';
-import {
-  createLipSyncController,
-  deactivateLipSyncController,
-  type LipSyncController,
-} from '../types/viseme';
 import type { ModelConfig } from '../types/models';
+import type { OrbitControlsRef } from '../types/three';
+
 
 export default function Avatar() {
   const { models, isLoading: modelsLoading, error: modelsError } = useModelConfig();
-  const [selectedModel, setSelectedModel] = useState<ModelConfig | null>(null);
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [refreshCount, setRefreshCount] = useState(0);
-  const [messages, setMessages] = useState<UIMessage[]>([]);
-  const [status, setStatus] = useState<ConversationStatus>('idle');
-  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
-  const controlsRef = useRef<any>(null);
-  const turnIdRef = useRef<string | null>(null);
-  const lipSyncControllerRef = useRef<LipSyncController>(createLipSyncController());
+  const controlsRef = useRef<OrbitControlsRef>(null);
 
   const { token, region } = useAzureToken();
 
-  // Auto-select first model once config loads
-  if (models.length > 0 && selectedModel === null) {
-    setSelectedModel(models[0]);
-  }
+  const selectedModel = useMemo<ModelConfig | null>(
+    () => models.find((m) => m.id === selectedModelId) ?? models[0] ?? null,
+    [models, selectedModelId],
+  );
+
+  const {
+    messages,
+    status,
+    speakingMessageId,
+    lipSyncController,
+    handleTextSubmit,
+    handleCancel,
+    handleClearHistory,
+  } = useConversation({ selectedModel, token, region });
 
   const handleRefresh = () => setRefreshCount((c) => c + 1);
 
-  const handleClearHistory = () => {
-    turnIdRef.current = null;
-    stopSpeaking();
-    deactivateLipSyncController(lipSyncControllerRef.current);
-    setStatus('idle');
-    setSpeakingMessageId(null);
-    setMessages([]);
-  };
-
-  const handleTextSubmit = async (text: string) => {
-    if (!selectedModel) return;
-    console.log('[Avatar] Received text:', text);
-
-    const turnId = crypto.randomUUID();
-    turnIdRef.current = turnId;
-
-    // 1. Add user message to UI immediately
-    const userMsg: UIMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      text,
-      timestamp: Date.now(),
-    };
-    setMessages((prev) => [...prev, userMsg]);
-    setStatus('thinking');
-
-    try {
-      // 2. Build conversation history for the backend
-      //    (previous turns + the new user message)
-      const history: ChatMessage[] = messages.map(m => ({
-        role: m.role,
-        content: m.text,
-      }));
-      history.push({ role: 'user', content: text });
-
-      // 3. Call the backend
-      const response = await generateResponse(history);
-
-      // Check if cancelled during "thinking"
-      if (turnIdRef.current !== turnId) {
-        console.log('[Avatar] Cancelled during thinking');
-        return;
-      }
-
-      // 4. Add assistant message to UI
-      const aiMsg: UIMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        text: response.text,
-        timestamp: Date.now(),
-      };
-      setMessages((prev) => [...prev, aiMsg]);
-
-      // 5. Speak via Azure TTS (if we have a token)
-      if (token) {
-        setStatus('speaking');
-        setSpeakingMessageId(aiMsg.id);
-
-        await speakText({
-          text: response.text,
-          token,
-          region,
-          language: selectedModel.voice.language,
-          voiceName: selectedModel.voice.voiceName,
-          lipSyncController: lipSyncControllerRef.current,
-          onError: (err) => console.error('[Avatar] TTS error:', err),
-        });
-
-        if (turnIdRef.current !== turnId) {
-          console.log('[Avatar] Cancelled during speaking');
-          return;
-        }
-      }
-    } catch (err) {
-      console.error('[Avatar] Pipeline error:', err);
-      const errMsg: UIMessage = {
-        id: crypto.randomUUID(),
-        role: 'assistant',
-        text: 'Sorry, something went wrong. Please try again.',
-        timestamp: Date.now(),
-      };
-      setMessages((prev) => [...prev, errMsg]);
-    } finally {
-      if (turnIdRef.current === turnId) {
-        setStatus('idle');
-        setSpeakingMessageId(null);
-        turnIdRef.current = null;
-      }
-    }
-  };
-
-  const handleCancel = () => {
-    console.log('[Avatar] Cancelled');
-    turnIdRef.current = null;
-    stopSpeaking();
-    deactivateLipSyncController(lipSyncControllerRef.current);
-    setStatus('idle');
-    setSpeakingMessageId(null);
-  };
-
-  // Loading state
   if (modelsLoading) {
     return (
       <div className="flex items-center justify-center h-[600px] text-gray-500">
@@ -146,7 +43,6 @@ export default function Avatar() {
     );
   }
 
-  // Error state
   if (modelsError || models.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[600px] text-red-500 gap-2">
@@ -156,36 +52,18 @@ export default function Avatar() {
     );
   }
 
-  // Safety — selectedModel should be set by the auto-select above
   if (!selectedModel) return null;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap justify-between items-center gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-bold text-gray-800">The Avatar</h1>
-          <StatusPill status={status} />
-        </div>
+      <AvatarHeader
+        status={status}
+        models={models}
+        selectedModelId={selectedModel.id}
+        onModelChange={(m) => setSelectedModelId(m.id)}
+        onRefresh={handleRefresh}
+      />
 
-        <div className="flex items-center gap-3">
-          <ModelSelector
-            models={models}
-            selectedId={selectedModel.id}
-            onChange={setSelectedModel}
-          />
-          <button
-            onClick={handleRefresh}
-            className="px-4 py-2 bg-stone-600 text-white rounded-lg hover:bg-stone-700 transition-colors font-medium flex items-center gap-1.5"
-            title="Reset camera view"
-          >
-            <Icon name="refresh" size={16} />
-            <span>Reset View</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Main: avatar + conversation */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         <div className="lg:col-span-3 h-[600px]">
           <AvatarStage
@@ -193,7 +71,7 @@ export default function Avatar() {
             refreshCount={refreshCount}
             controlsRef={controlsRef}
             status={status}
-            lipSyncController={lipSyncControllerRef.current}
+            lipSyncController={lipSyncController}
           />
         </div>
         <div className="lg:col-span-2 h-[600px]">
@@ -206,7 +84,6 @@ export default function Avatar() {
         </div>
       </div>
 
-      {/* Footer: input */}
       <VoiceInput
         onTextSubmit={handleTextSubmit}
         onCancel={handleCancel}
