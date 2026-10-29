@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import { DUMMY_USER_ID } from '../config/constants';
 import { speakText, stopSpeaking } from '../services/azureTTS';
 import { generateResponse } from '../services/llm';
 import { ChatError, type ChatMessage, type ChatRequest } from '../types/chat';
@@ -9,7 +10,6 @@ import {
   deactivateLipSyncController,
   type LipSyncController,
 } from '../types/viseme';
-
 
 interface UseConversationParams {
   selectedModel: ModelConfig | null;
@@ -69,7 +69,6 @@ export function useConversation({
   const [status, setStatus] = useState<ConversationStatus>('idle');
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const turnIdRef = useRef<string | null>(null);
-  const sessionIdRef = useRef<string>(crypto.randomUUID());
   const lipSyncControllerRef = useRef<LipSyncController>(createLipSyncController());
 
   const resetPipelineState = useCallback(() => {
@@ -99,14 +98,8 @@ export function useConversation({
       history.push({ role: 'user', content: text });
 
       const request: ChatRequest = {
-        sessionId: sessionIdRef.current,
+        userId: DUMMY_USER_ID,
         messages: history,
-        model: {
-          id: selectedModel.id,
-          format: selectedModel.format,
-          voice: selectedModel.voice,
-        },
-        timestamp: Date.now(),
       };
 
       const response = await generateResponse(request);
@@ -154,7 +147,6 @@ export function useConversation({
   const handleClearHistory = useCallback(() => {
     resetPipelineState();
     setMessages([]);
-    sessionIdRef.current = crypto.randomUUID();
   }, [resetPipelineState]);
 
   return {

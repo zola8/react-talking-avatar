@@ -1,5 +1,3 @@
-import type { ModelConfig } from './models';
-
 export type ChatRole = 'user' | 'assistant' | 'system';
 
 export interface ChatMessage {
@@ -7,13 +5,9 @@ export interface ChatMessage {
   content: string;
 }
 
-export type ChatModelContext = Pick<ModelConfig, 'id' | 'format' | 'voice'>;
-
 export interface ChatRequest {
-  sessionId: string;
+  userId: string;
   messages: ChatMessage[];
-  model: ChatModelContext;
-  timestamp: number;
 }
 
 export interface ChatResponse {

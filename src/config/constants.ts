@@ -6,6 +6,8 @@ export const BACKEND_URL =
 
 export const CHAT_TIMEOUT_MS = 30_000;
 
+export const DUMMY_USER_ID = 'demo-user-1';
+
 export const DEFAULT_ROTATION: [number, number, number] = [0, 0, 0];
 export const DEFAULT_Y_OFFSET = 0;
 
