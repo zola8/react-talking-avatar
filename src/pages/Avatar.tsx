@@ -12,11 +12,11 @@ import type { OrbitControlsRef } from '../types/three';
 
 export default function Avatar() {
   const { models, isLoading: modelsLoading, error: modelsError } = useModelConfig();
+  const { token, region, error: tokenError, refresh: refreshToken } = useAzureToken();
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [refreshCount, setRefreshCount] = useState(0);
   const controlsRef = useRef<OrbitControlsRef>(null);
 
-  const { token, region } = useAzureToken();
 
   const selectedModel = useMemo<ModelConfig | null>(
     () => models.find((m) => m.id === selectedModelId) ?? models[0] ?? null,
@@ -27,6 +27,7 @@ export default function Avatar() {
     messages,
     status,
     speakingMessageId,
+    ttsError,
     lipSyncController,
     handleTextSubmit,
     handleCancel,
@@ -63,6 +64,24 @@ export default function Avatar() {
         onModelChange={(m) => setSelectedModelId(m.id)}
         onRefresh={handleRefresh}
       />
+
+      {tokenError && !token && (
+        <div className="flex items-center justify-between gap-3 bg-amber-50 border border-amber-300 rounded-lg px-4 py-2 text-sm text-amber-800">
+          <span>Voice unavailable: {tokenError}</span>
+          <button
+            onClick={refreshToken}
+            className="px-3 py-1 bg-amber-600 text-white rounded-md hover:bg-amber-700 text-xs font-medium"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {ttsError && (
+        <div className="flex items-center justify-between gap-3 bg-amber-50 border border-amber-300 rounded-lg px-4 py-2 text-sm text-amber-800">
+          <span>Voice failed: {ttsError}. Response shown as text only.</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         <div className="lg:col-span-3 h-[600px]">

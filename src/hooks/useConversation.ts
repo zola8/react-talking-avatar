@@ -21,6 +21,7 @@ export interface UseConversationResult {
   messages: UIMessage[];
   status: ConversationStatus;
   speakingMessageId: string | null;
+  ttsError: string | null; 
   lipSyncController: LipSyncController;
   handleTextSubmit: (text: string) => Promise<void>;
   handleCancel: () => void;
@@ -70,6 +71,7 @@ export function useConversation({
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const turnIdRef = useRef<string | null>(null);
   const lipSyncControllerRef = useRef<LipSyncController>(createLipSyncController());
+  const [ttsError, setTtsError] = useState<string | null>(null);
 
   const resetPipelineState = useCallback(() => {
     turnIdRef.current = null;
@@ -89,6 +91,7 @@ export function useConversation({
     const userMsg = makeMessage('user', text);
     setMessages((prev) => [...prev, userMsg]);
     setStatus('thinking');
+    setTtsError(null);
 
     try {
       const history: ChatMessage[] = messages.map((m) => ({
@@ -123,7 +126,10 @@ export function useConversation({
           language: selectedModel.voice.language,
           voiceName: selectedModel.voice.voiceName,
           lipSyncController: lipSyncControllerRef.current,
-          onError: (err) => console.error('[Avatar] TTS error:', err),
+          onError: (err) => {
+            console.error('[Avatar] TTS error:', err);
+            setTtsError(err);
+          },
         });
 
         if (turnIdRef.current !== turnId) {
@@ -153,6 +159,7 @@ export function useConversation({
     messages,
     status,
     speakingMessageId,
+    ttsError,
     lipSyncController: lipSyncControllerRef.current,
     handleTextSubmit,
     handleCancel: resetPipelineState,

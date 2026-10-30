@@ -108,5 +108,5 @@ export function useAzureToken() {
     fetchToken();
   }, [fetchToken]);
 
-  return state;
+  return { ...state, refresh: fetchToken };
 }
