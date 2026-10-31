@@ -45,13 +45,7 @@ Repository: https://github.com/zola8/react-talking-avatar
 npm install
 ```
 
-2. Create .env at the project root
-
-```
-AZURE_SPEECH_KEY=your-azure-speech-key-here
-```
-
-3. Start the dev server:
+2. Start the dev server:
 
 ```shell
 npm run dev

@@ -7,3 +7,6 @@ workers_dev = true
 directory = "./dist"
 not_found_handling = "single-page-application"
 binding = "ASSETS"
+
+[vars]
+VITE_BACKEND_URL = "https://talking-avatar-be.zola8.workers.dev"
