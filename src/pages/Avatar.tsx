@@ -2,14 +2,13 @@ import { useMemo, useRef, useState } from 'react';
 import AvatarHeader from '../components/AvatarHeader';
 import AvatarStage from '../components/AvatarStage';
 import ConversationTranscript from '../components/ConversationTranscript';
+import StreamLog from '../components/streamlog/StreamLog';
 import VoiceInput from '../components/VoiceInput';
 import { useAzureToken } from '../hooks/useAzureToken';
 import { useConversation } from '../hooks/useConversation';
 import { useModelConfig } from '../hooks/useModelConfig';
 import type { ModelConfig } from '../types/models';
 import type { OrbitControlsRef } from '../types/three';
-import StreamLog from '../components/streamlog/StreamLog';
-import { useStreamLog } from '../hooks/useStreamLog';
 
 
 export default function Avatar() {
@@ -19,13 +18,10 @@ export default function Avatar() {
   const [refreshCount, setRefreshCount] = useState(0);
   const controlsRef = useRef<OrbitControlsRef>(null);
 
-
   const selectedModel = useMemo<ModelConfig | null>(
     () => models.find((m) => m.id === selectedModelId) ?? models[0] ?? null,
     [models, selectedModelId],
   );
-
-  const streamLog = useStreamLog();
 
   const {
     messages,
@@ -33,6 +29,7 @@ export default function Avatar() {
     speakingMessageId,
     ttsError,
     lipSyncController,
+    streamLog,
     handleTextSubmit,
     handleCancel,
     handleClearHistory,
@@ -116,10 +113,7 @@ export default function Avatar() {
         language={selectedModel.voice.language}
       />
 
-      <StreamLog
-        entries={streamLog.entries}
-        onClear={streamLog.clear}
-      />
+      <StreamLog entries={streamLog.entries} />
     </div>
   );
 }
