@@ -8,6 +8,8 @@ import { useConversation } from '../hooks/useConversation';
 import { useModelConfig } from '../hooks/useModelConfig';
 import type { ModelConfig } from '../types/models';
 import type { OrbitControlsRef } from '../types/three';
+import StreamLog from '../components/StreamLog';
+import { useStreamLog } from '../hooks/useStreamLog';
 
 
 export default function Avatar() {
@@ -22,6 +24,8 @@ export default function Avatar() {
     () => models.find((m) => m.id === selectedModelId) ?? models[0] ?? null,
     [models, selectedModelId],
   );
+
+  const streamLog = useStreamLog();
 
   const {
     messages,
@@ -110,6 +114,11 @@ export default function Avatar() {
         token={token}
         region={region}
         language={selectedModel.voice.language}
+      />
+
+      <StreamLog
+        entries={streamLog.entries}
+        onClear={streamLog.clear}
       />
     </div>
   );

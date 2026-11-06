@@ -15,7 +15,7 @@ export async function generateResponse(
 
   let resp: Response;
   try {
-    resp = await fetch(`${BACKEND_URL}/chat`, {
+    resp = await fetch(`${BACKEND_URL}/chat/stream`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
