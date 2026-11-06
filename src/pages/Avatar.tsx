@@ -8,7 +8,7 @@ import { useConversation } from '../hooks/useConversation';
 import { useModelConfig } from '../hooks/useModelConfig';
 import type { ModelConfig } from '../types/models';
 import type { OrbitControlsRef } from '../types/three';
-import StreamLog from '../components/StreamLog';
+import StreamLog from '../components/streamlog/StreamLog';
 import { useStreamLog } from '../hooks/useStreamLog';
 
 

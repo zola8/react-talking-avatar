@@ -1,61 +1,66 @@
 import { useCallback, useRef, useState } from 'react';
-import type { LogEntry, LogLevel } from '../components/StreamLog';
+import type { StreamEventKind, StreamLogEntry } from '../components/streamlog/StreamLog';
 
 let counter = 0;
 
+
 export interface UseStreamLogResult {
-  entries: LogEntry[];
-  /** Append a single log entry. Returns the created entry. */
-  append: (level: LogLevel, message: string, data?: unknown) => LogEntry;
-  /** Convenience helpers for the common levels. */
-  info: (message: string, data?: unknown) => void;
-  success: (message: string, data?: unknown) => void;
-  warn: (message: string, data?: unknown) => void;
-  error: (message: string, data?: unknown) => void;
-  /** Append a parsed SSE event. The `data` is shown as JSON. */
-  sse: (message: string, data?: unknown) => void;
-  /** Remove all entries. */
+  entries: StreamLogEntry[];
+  append: (kind: StreamEventKind, title: string, detail?: string, data?: unknown) => StreamLogEntry;
+  text: (title: string, detail?: string, data?: unknown) => void;
+  thinking: (title: string, detail?: string, data?: unknown) => void;
+  reasoning: (title: string, detail?: string, data?: unknown) => void;
+  toolCall: (title: string, detail?: string, data?: unknown) => void;
+  toolResult: (title: string, detail?: string, data?: unknown) => void;
+  metadata: (title: string, detail?: string, data?: unknown) => void;
+  done: (title: string, detail?: string, data?: unknown) => void;
+  error: (title: string, detail?: string, data?: unknown) => void;
   clear: () => void;
 }
 
 
-
 export function useStreamLog(maxEntries = 200): UseStreamLogResult {
-  const [entries, setEntries] = useState<LogEntry[]>([]);
+  const [entries, setEntries] = useState<StreamLogEntry[]>([]);
   const maxRef = useRef(maxEntries);
   maxRef.current = maxEntries;
 
   const append = useCallback(
-    (level: LogLevel, message: string, data?: unknown): LogEntry => {
-      const entry: LogEntry = {
+    (kind: StreamEventKind, title: string, detail?: string, data?: unknown): StreamLogEntry => {
+      const entry: StreamLogEntry = {
         id: `${Date.now()}-${counter++}`,
         timestamp: Date.now(),
-        level,
-        message,
+        kind,
+        title,
+        detail,
         data,
       };
-      setEntries((prev) => {
-        const next = prev.length + 1 > maxRef.current
-          ? [...prev.slice(-(maxRef.current - 1)), entry]
-          : [...prev, entry];
-        return next;
-      });
+      setEntries((prev) =>
+        prev.length + 1 <= maxRef.current
+          ? [...prev, entry]
+          : [...prev.slice(-(maxRef.current - 1)), entry],
+      );
       return entry;
     },
     [],
   );
 
-  const make = (level: LogLevel) =>
-    (message: string, data?: unknown) => append(level, message, data);
+  const make = (kind: StreamEventKind) =>
+    useCallback(
+      (title: string, detail?: string, data?: unknown) => append(kind, title, detail, data),
+      [append],
+    );
 
   return {
     entries,
     append,
-    info: make('info'),
-    success: make('success'),
-    warn: make('warn'),
+    text: make('text'),
+    thinking: make('thinking'),
+    reasoning: make('reasoning'),
+    toolCall: make('tool_call'),
+    toolResult: make('tool_result'),
+    metadata: make('metadata'),
+    done: make('done'),
     error: make('error'),
-    sse: make('sse'),
     clear: useCallback(() => setEntries([]), []),
   };
 }
